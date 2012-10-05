@@ -253,11 +253,16 @@ public class FileCache {
 		} catch (FileNotFoundException __e) {
 			Log.e("FileCache", "Error trying to write file: file not found! " + __e);
 		}
-		__bitmap.compress(__format, __quality, output);
-		updateFileListStats(file.length(), 1);
 
-		Log.i("FileCache", "putFile() :: File " + __id + " saved as " + getFileName(__id) + " on " + getCacheDir().getAbsolutePath());
-		Log.i("FileCache", "putFile() :: Total file cache size is " + getTotalSize() + " in " + getNumFiles() + " files");
+		if (output != null && __bitmap != null && __format != null) {
+			__bitmap.compress(__format, __quality, output);
+			updateFileListStats(file.length(), 1);
+
+			Log.i("FileCache", "putFile() :: File " + __id + " saved as " + getFileName(__id) + " on " + getCacheDir().getAbsolutePath());
+			Log.i("FileCache", "putFile() :: Total file cache size is " + getTotalSize() + " in " + getNumFiles() + " files");
+
+			System.gc();
+		}
 
 		// TODO: delete files based on cache limit size?
 	}
