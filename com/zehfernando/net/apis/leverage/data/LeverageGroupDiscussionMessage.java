@@ -35,22 +35,27 @@ public class LeverageGroupDiscussionMessage extends LeverageGroupDiscussion {
 	// ================================================================================================================
 	// ACCESSOR INTERFACE ---------------------------------------------------------------------------------------------
 
+	@Override
 	public String getAuthorId() {
 		return authorId;
 	}
 
+	@Override
 	public String getAuthorName() {
 		return authorName;
 	}
 
+	@Override
 	public int getRatingTotal() {
 		return ratingTotal;
 	}
 
+	@Override
 	public String getMessageDate() {
 		return messageDate;
 	}
 
+	@Override
 	public String getMessageBody() {
 		return messageBody;
 	}

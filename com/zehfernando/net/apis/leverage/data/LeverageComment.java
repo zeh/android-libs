@@ -1,27 +1,22 @@
 package com.zehfernando.net.apis.leverage.data;
 
 import com.zehfernando.data.xml.XML;
-import com.zehfernando.net.apis.leverage.LeverageConstants;
 import com.zehfernando.net.apis.leverage.enums.LeverageObjectTypes;
 
-public class LeverageGroup extends LeverageObject {
+public class LeverageComment extends LeverageObject {
 
 	// Properties
-	protected String imageURL;
-	protected String authorId;
-	protected String authorName;
+	protected String message;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
-	public LeverageGroup() {
+	public LeverageComment() {
 		super();
 
-		type = LeverageObjectTypes.GROUP;
+		type = LeverageObjectTypes.COMMENT;
 
-		imageURL = "";
-		authorId = "";
-		authorName = "";
+		message = "";
 	}
 
 	// ================================================================================================================
@@ -31,26 +26,18 @@ public class LeverageGroup extends LeverageObject {
 	public void setDataFromXML(XML __item) {
 		super.setDataFromXML(__item);
 
-		imageURL = __item.getChild("enclosure", "").getAttribute("url").getText() + LeverageConstants.THUMBNAIL_PREFFIX;
-		authorId = __item.getChild("OwnerID", "").getText();
-		authorName = __item.getChild("MemberName", "").getText();
+		message = __item.getChild("Message", "").getText();
 
-		// ls:CustomerID // Same as owner ID
-		// ls:PrivacySetting
+		// ls:CommentObjectType
+		// ls:CommentObjectID
+		// ls:CustomerID
+		// ls:MemberName
 	}
 
 	// ================================================================================================================
 	// ACCESSOR INTERFACE ---------------------------------------------------------------------------------------------
 
-	public String getImageURL() {
-		return imageURL.replace("&w=50","&w=100").replace("&h=50","&h=100");
-	}
-
-	public String authorId() {
-		return authorId;
-	}
-
-	public String getAuthorName() {
-		return authorName;
+	public String getMessage() {
+		return message;
 	}
 }

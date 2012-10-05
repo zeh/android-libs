@@ -1,22 +1,12 @@
 package com.zehfernando.net.apis.leverage.services.news;
 
-import java.util.ArrayList;
-
 import com.zehfernando.net.apis.leverage.LeverageConstants;
-import com.zehfernando.net.apis.leverage.data.LeverageObject;
-import com.zehfernando.net.apis.leverage.services.BasicLeverageRequest;
+import com.zehfernando.net.apis.leverage.services.BasicLeverageAuthorizedRequest;
 
-public class LeverageNewsGetRequest extends BasicLeverageRequest {
+public class LeverageNewsGetRequest extends BasicLeverageAuthorizedRequest {
 
 	// Parameters
-	public static final String PARAMETER_AUTHTOKEN = LeverageConstants.PARAMETER_AUTHTOKEN;
-
-	// Response
-	protected String title;
-	protected String link;
-	protected String description;
-	protected String pubDate;
-	protected ArrayList<LeverageObject> items;
+	public static final String PARAMETER_COUNT = LeverageConstants.PARAMETER_COUNT;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
@@ -28,7 +18,7 @@ public class LeverageNewsGetRequest extends BasicLeverageRequest {
 		setParameter(PARAMETER_METHOD, "News.Get");
 
 		// Parameters
-		setParameter(PARAMETER_AUTHTOKEN, "");
+		setParameter(PARAMETER_COUNT, "10");
 
 	}
 }

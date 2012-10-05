@@ -78,6 +78,7 @@ public class LeverageGroupDiscussion extends LeverageObject {
 
 	public String getGeneratedImageUrl() {
 		// Generate an image URL for this group discussion based on the author ID
-		return LeverageConstants.THUMBNAIL_URL_GROUPPHOTO.replace("[[id]]", authorId);
+		return LeverageConstants.THUMBNAIL_URL_PHOTO.replace("[[id]]", authorId);
+		//return LeverageConstants.THUMBNAIL_URL_GROUPPHOTO.replace("[[id]]", authorId);
 	}
 }

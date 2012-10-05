@@ -19,6 +19,8 @@ public class LeverageObject {
 	protected Date pubDate;
 	protected String type;
 
+	protected ArrayList<LeverageObject> items;
+
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
@@ -29,6 +31,7 @@ public class LeverageObject {
 		description = "";
 		pubDate = new Date();
 		type = "";
+		items = new ArrayList<LeverageObject>();
 	}
 
 	// ================================================================================================================
@@ -68,6 +71,9 @@ public class LeverageObject {
 		pubDate = LeverageDataUtils.getDateFromString(__item.getChild("pubDate", "").getText());
 
 		id = __item.getChild("ID", "").getText();
+
+		ArrayList<XML> xmlItems = __item.getChildren("item");
+		items = LeverageObject.fromXMLArrayList(xmlItems);
 	}
 
 	public static LeverageObject createObject(String __objectType) {
@@ -78,8 +84,9 @@ public class LeverageObject {
 		if (__objectType == LeverageObjectTypes.GROUP_DISCUSSION_MESSAGE)	return new LeverageGroupDiscussionMessage();
 		if (__objectType == LeverageObjectTypes.STATUS_UPDATE)				return new LeverageStatusUpdate();
 		if (__objectType == LeverageObjectTypes.CUSTOMER)					return new LeverageCustomer();
-//		if (__objectType == LeverageObjectTypes.CUSTOMER)					return new LeverageCustomerFile();
-//		if (__objectType == LeverageObjectTypes.COMMENT)					return new LeverageComment();
+		if (__objectType == LeverageObjectTypes.RATING)						return new LeverageRating();
+		if (__objectType == LeverageObjectTypes.CUSTOMER_FILE)				return new LeverageCustomerFile();
+		if (__objectType == LeverageObjectTypes.COMMENT)					return new LeverageComment();
 
 		Log.e("LeverageObject", "Error! Tried creating an object of type " + __objectType + "!!!");
 
@@ -112,4 +119,9 @@ public class LeverageObject {
 	public String getType() {
 		return type;
 	}
+
+	public ArrayList<LeverageObject> getItems() {
+		return items;
+	}
+
 }

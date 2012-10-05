@@ -1,6 +1,7 @@
 package com.zehfernando.net.apis.leverage.data;
 
 import com.zehfernando.data.xml.XML;
+import com.zehfernando.net.apis.leverage.LeverageConstants;
 import com.zehfernando.net.apis.leverage.enums.LeverageObjectTypes;
 
 public class LeverageCustomer extends LeverageObject {
@@ -28,7 +29,7 @@ public class LeverageCustomer extends LeverageObject {
 	public void setDataFromXML(XML __item) {
 		super.setDataFromXML(__item);
 
-		imageURL = __item.getChild("enclosure", "").getAttribute("url").getText();
+		imageURL = __item.getChild("enclosure", "").getAttribute("url").getText() + LeverageConstants.THUMBNAIL_PREFFIX;
 		name = __item.getChild("MemberName", "").getText();
 		relevance = __item.getChild("Relevance", "0").getTextAsInt(10);
 

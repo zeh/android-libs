@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
+import android.util.Log;
+
 import com.zehfernando.data.xml.XML;
 import com.zehfernando.net.apis.BasicServiceRequest;
 import com.zehfernando.net.apis.leverage.LeverageConstants;
@@ -36,6 +38,24 @@ public class BasicLeverageRequest extends BasicServiceRequest {
 	protected OnServiceLoadingStart onServiceLoadingStartListener;
 	protected OnServiceLoadingProgress onServiceLoadingProgressListener;
 	protected OnServiceLoadingComplete onServiceLoadingCompleteListener;
+
+	// ================================================================================================================
+	// INTERNAL INTERFACE ---------------------------------------------------------------------------------------------
+
+	protected boolean parseResponseData() {
+		Log.i("BasicLeverageRequest", "Service load successful");
+		XML response = new XML(getRawResponse());
+
+		if (response.getNodeName().equals("error")) {
+			// A response was received, but it's actually an error response
+			errorMessage = response.getText();
+			return false;
+		} else {
+			// Parse success data
+			parseSuccessResponseData(new XML(rawResponse));
+			return true;
+		}
+	}
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
@@ -140,6 +160,31 @@ public class BasicLeverageRequest extends BasicServiceRequest {
 	}
 
 	// ================================================================================================================
+	// EXTENDABLE INTERFACE -------------------------------------------------------------------------------------------
+
+//	@Override
+//	protected String getRequestContent() {
+//		// Iterate through the parameters hashmap and generate the content
+//
+//		boolean hasStarted = false;
+//		String content = "";
+//
+//		for (String key:requestParameters.keySet()) {
+//			if (hasStarted) content += "&";
+//
+//			try {
+//				content += key + "=" + URLEncoder.encode(requestParameters.get(key), "UTF-8");
+//			} catch (UnsupportedEncodingException e) {
+//	            Log.e("BasicServiceRequest", "Could not encode value from key " + key + " to UTF-8!");
+//			}
+//
+//			hasStarted = true;
+//		}
+//
+//		return content;
+//	}
+
+	// ================================================================================================================
 	// EVENT INTERFACE ------------------------------------------------------------------------------------------------
 
 	@Override
@@ -163,20 +208,12 @@ public class BasicLeverageRequest extends BasicServiceRequest {
 	@Override
 	protected void onServiceLoadingComplete() {
 		super.onServiceLoadingComplete();
-
-		//Log.v("BasicLeverageRequest", " ===> " + getRawResponse());
-		XML resp = new XML(getRawResponse());
-
-		if (resp.getNodeName().equals("error")) {
-			// A response was received, but it's actually an error response
-			errorMessage = resp.getText();
+		boolean isSuccess = parseResponseData();
+		if (isSuccess) {
+			dispatchOnServiceLoadingComplete();
+		} else {
 			dispatchOnServiceLoadingError();
-			return;
 		}
-
-		parseSuccessResponseData(new XML(rawResponse));
-
-		dispatchOnServiceLoadingComplete();
 	};
 
 	// ================================================================================================================

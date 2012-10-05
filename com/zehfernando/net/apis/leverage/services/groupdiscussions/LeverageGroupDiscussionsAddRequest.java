@@ -1,13 +1,11 @@
 package com.zehfernando.net.apis.leverage.services.groupdiscussions;
 
-import com.zehfernando.net.apis.leverage.LeverageConstants;
-import com.zehfernando.net.apis.leverage.services.BasicLeverageRequest;
+import com.zehfernando.net.apis.leverage.services.BasicLeverageAuthorizedRequest;
 
-public class LeverageGroupDiscussionsAddRequest extends BasicLeverageRequest {
+public class LeverageGroupDiscussionsAddRequest extends BasicLeverageAuthorizedRequest {
 
 	// Parameters
-	public static final String PARAMETER_AUTHTOKEN = LeverageConstants.PARAMETER_AUTHTOKEN;
-	public static final String PARAMETER_GROUPID = "groupid"; // If omitted, lists everything
+	public static final String PARAMETER_GROUPID = "groupid";
 	public static final String PARAMETER_NAME = "name";
 	public static final String PARAMETER_MESSAGE = "message";
 
@@ -21,7 +19,6 @@ public class LeverageGroupDiscussionsAddRequest extends BasicLeverageRequest {
 		setParameter(PARAMETER_METHOD, "GroupDiscussions.Add");
 
 		// Parameters
-		setParameter(PARAMETER_AUTHTOKEN, "");
 		setParameter(PARAMETER_GROUPID, "");
 		setParameter(PARAMETER_NAME, "");
 		setParameter(PARAMETER_MESSAGE, "");

@@ -1,12 +1,11 @@
 package com.zehfernando.net.apis.leverage.services.groups;
 
 import com.zehfernando.net.apis.leverage.LeverageConstants;
-import com.zehfernando.net.apis.leverage.services.BasicLeverageRequest;
+import com.zehfernando.net.apis.leverage.services.BasicLeverageAuthorizedRequest;
 
-public class LeverageGroupsGetAllRequest extends BasicLeverageRequest {
+public class LeverageGroupsGetAllRequest extends BasicLeverageAuthorizedRequest {
 
 	// Parameters
-	public static final String PARAMETER_AUTHTOKEN = LeverageConstants.PARAMETER_AUTHTOKEN;
 	public static final String PARAMETER_IMAGE = "image";
 	public static final String PARAMETER_KEYWORD = LeverageConstants.PARAMETER_KEYWORD;
 	public static final String PARAMETER_COUNT = LeverageConstants.PARAMETER_COUNT;
@@ -25,10 +24,8 @@ public class LeverageGroupsGetAllRequest extends BasicLeverageRequest {
 		setParameter(PARAMETER_METHOD, "Groups.GetAll");
 
 		// Parameters
-		setParameter(PARAMETER_AUTHTOKEN, "");
 		setParameter(PARAMETER_IMAGE, "");
 		setParameter(PARAMETER_KEYWORD, "");
 		setParameter(PARAMETER_COUNT, "10");
-
 	}
 }

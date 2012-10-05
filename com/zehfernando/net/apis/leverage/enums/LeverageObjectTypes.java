@@ -9,5 +9,6 @@ public class LeverageObjectTypes {
 	public static final String CUSTOMER = "Customer";
 	public static final String CUSTOMER_FILE = "CustomerFile";
 	public static final String COMMENT = "Comment";
+	public static final String RATING = "Rating";
 
 }
