@@ -10,14 +10,14 @@ import android.util.Log;
 
 public class ShareUtils {
 
-	public static void shareContent(Context __context) {
-		final Intent sendIntent = new Intent(Intent.ACTION_SEND);
-		sendIntent.setType("image/jpeg");
-		__context.startActivity(Intent.createChooser(sendIntent , "Send .."));
-	}
+//	public static void shareContent(Context __context) {
+//		final Intent sendIntent = new Intent(Intent.ACTION_SEND);
+//		sendIntent.setType("image/jpeg");
+//		__context.startActivity(Intent.createChooser(sendIntent , "Send .."));
+//	}
 
 	public static void sendEmail(Context __context, String __dialogTitle, String __subject, String __body) {
-		sendEmail(__context, __dialogTitle, __subject, __body, null, "");
+		sendEmail(__context, __dialogTitle, __subject, __body, null, null);
 	}
 
 	public static void sendEmail(Context __context, String __dialogTitle, String __subject, String __body, Uri __attachmentUri, String __attachmentName) {
