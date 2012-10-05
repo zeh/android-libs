@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.redkenfb.stylestation.ApplicationConstants;
+
 import android.util.Log;
 
 public class FileUtils {
@@ -38,22 +40,35 @@ public class FileUtils {
 	}
 
 	public static void emptyFolder(File __file) {
-		long bytesDeleted = 0;
-		long filesDeleted = 0;
-		File[] files = __file.listFiles();
+		if (!__file.isDirectory()) {
+			Log.e("FileUtils", "Tried to delete a folder that doesn't exist or is not a directory: " + __file);
+		} else {
+			long bytesDeleted = 0;
+			long filesDeleted = 0;
+			File[] files = __file.listFiles();
 
-		for (int i = 0; i < files.length; i++) {
-			bytesDeleted += files[i].length();
-			filesDeleted++;
-			files[i].delete();
+			if (files != null) {
+				for (int i = 0; i < files.length; i++) {
+					if (ApplicationConstants.IS_DEBUGGING) bytesDeleted += files[i].length();
+					filesDeleted++;
+					files[i].delete();
+				}
+
+				__file.delete();
+
+				Log.w("FileUtils", "Deleted " + (bytesDeleted/1024) + "kb in " + filesDeleted + " files from folder " + __file);
+
+			} else {
+				Log.e("FileUtils", "Tried to list contents of a folder and got null as a response!");
+			}
 		}
-
-		Log.w("FileUtils", "Deleted " + (bytesDeleted/1024) + "kb in " + filesDeleted + " files from folder " + __file);
 	}
 
 	public static long getFolderSize(File __file) {
 		long total = 0;
 		File[] files = __file.listFiles();
+
+		if (files == null) return -1; // Not a directory
 
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory()) {
