@@ -93,7 +93,7 @@ public class ImageLoader {
 
 	public FileCache getCache() {
 		// Returns the file cache used
-		return FileCache.getFileCache(cacheName);
+		return FileCache.getFileCache(imageView.getContext(), cacheName);
 	}
 
 	public static ImageLoader getRemoteImageLoader(ImageView __imageView) {

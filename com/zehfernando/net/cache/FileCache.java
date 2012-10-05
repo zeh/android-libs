@@ -9,37 +9,40 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.util.Log;
 
+import com.redkenfb.stylestation.ApplicationConstants;
+import com.zehfernando.utils.F;
 import com.zehfernando.utils.StringUtils;
 
 public class FileCache {
 
 	// Static properties
-	private static Context context;
-
 	private static ArrayList<FileCache> caches = new ArrayList<FileCache>();
 
 	// Properties
-	private String id;
+	private final String id;
 	private String uniqueId;				// Id used for subfolder name
 
 	private long totalSize;					// Size of the cache, in bytes
 	private int numFiles;					// Number of files in the cache
 	private boolean fileListStatsDirty;			// If true, the number of files and file size in the cache is not known
 
+	private File baseFolder;
+
 	// ================================================================================================================
 	// STATIC INTERFACE -----------------------------------------------------------------------------------------------
 
-	public static FileCache getFileCache() {
-		return getFileCache("");
+	public static FileCache getFileCache(Context __context) {
+		return getFileCache(__context, "");
 	}
 
-	public static FileCache getFileCache(String __id) {
+	public static FileCache getFileCache(Context __context, String __id) {
 		int i;
 
 		// Try to find the cache
@@ -48,44 +51,66 @@ public class FileCache {
 		}
 
 		// Create in case it doesn't exist
-		return new FileCache(__id);
+		return new FileCache(__context, __id);
 	}
 
 	public static void addFileCache(FileCache __fileCache) {
 		caches.add(__fileCache);
 	}
 
-	public static void init(Context __context) {
-		context = __context;
-	}
-
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
-	public FileCache() {
+	public FileCache(Context __context) {
 		id = "";
 
-		initialize();
+		initialize(__context);
 	}
 
-	public FileCache(String __id) {
+	public FileCache(Context __context, String __id) {
 		id = __id;
 
-		initialize();
+		initialize(__context);
 	}
 
 	// ================================================================================================================
 	// INTERNAL INTERFACE ---------------------------------------------------------------------------------------------
 
-	private void initialize() {
-		uniqueId = StringUtils.calculateMD5(id);
-		if (uniqueId == null) id.replace("/","_").replace(" ","_").replace("\\","_").replace(":","_");
+	private void initialize(Context __context) {
+		//uniqueId = StringUtils.calculateMD5(id);
+		//if (uniqueId == null) uniqueId = id.replace("/","_").replace(" ","_").replace("\\","_").replace(":","_");
+		uniqueId = id.replace("/","_").replace(" ","_").replace("\\","_").replace(":","_");
 
-		FileCache.addFileCache(this);
+		// Find the base folder
+
+		// * Saved on internal memory, as part of the application data
+		// * Cleared by the system if needed
+		// * Goes to the "cache" area of the application data on Android's application data management screen
+		// Equivalent to "/data/data/com.redken.stylestation/cache"
+		// http://developer.android.com/reference/android/content/Context.html#getCacheDir()
+
+		//if (id == "") return context.getCacheDir();
+
+		// If a different id, use a subfolder
+		//File baseFolder = new File(context.getCacheDir(), uniqueId);
+
+		baseFolder = new File(__context.getCacheDir(), id.length() == 0 ? "none" : uniqueId);
+		if (!baseFolder.exists()) baseFolder.mkdir();
+
+		// * Saved on external memory
+		// * Not cleared by the system
+		// * Unavailable when SD card is mounted
+		// * Requires WRITE_EXTERNAL_STORAGE permission
+		// * Doesn't go to the "cache" area of the application data on Android's application data management screen
+		// Equivalent to "/mnt/sdcard/Android/data/com.redken.stylestation/cache"
+		// http://developer.android.com/reference/android/content/Context.html#getExternalCacheDir()
+		//return context.getExternalCacheDir();
 
 		totalSize = 0;
 		numFiles = 0;
 		fileListStatsDirty = true;
+
+		FileCache.addFileCache(this);
 	}
 
 	private String getFileName(String __id) {
@@ -269,6 +294,52 @@ public class FileCache {
 		return wasDeleted;
 	}
 
+	public void trimFilesByAge(long __days) {
+		// Delete files from the cache based on how old they are
+		F.log("Erasing files from cache [" + id + "] that are " + __days + " or more days old");
+		long now = System.currentTimeMillis();
+		long maxAge = __days * 24 * 60 * 60 * 1000;
+
+		if (ApplicationConstants.IS_DEBUGGING) maxAge /= 10;
+
+		long cutTime = now - maxAge;
+
+		F.log("   Time now is " + new Date(now).toString() + "; erasing files created before " + new Date(cutTime).toString());
+
+		int bNumFiles = getNumFiles();
+		long bTotalSize = getTotalSize();
+
+		int filesDeleted = 0;
+		long bytesDeleted = 0;
+		boolean wasDeleted;
+		long fileSize;
+
+		File[] files = getCacheDir().listFiles();
+
+		for (File f:files) {
+
+			if (f.lastModified() < cutTime) {
+				// Delete the file
+				if (ApplicationConstants.IS_DEBUGGING) F.warn("      Deleting file ["+f.getName()+"] created in " + new Date(f.lastModified()).toString());
+
+				fileSize = ApplicationConstants.IS_DEBUGGING ? 0 : f.length();
+				wasDeleted = f.delete();
+
+				if (wasDeleted) {
+					bytesDeleted += fileSize;
+					filesDeleted++;
+					fileListStatsDirty = true;
+				}
+			}
+		}
+
+		F.log("   " + filesDeleted + " files and " + bytesDeleted + " bytes deleted (of " + bNumFiles + " files and " + bTotalSize + " bytes)");
+
+		F.log("   Took " + (System.currentTimeMillis() - now) + "ms to trim file cache");
+
+	}
+
+
 	// ================================================================================================================
 	// ACCESSOR INTERFACE ---------------------------------------------------------------------------------------------
 
@@ -277,31 +348,7 @@ public class FileCache {
 	}
 
 	public File getCacheDir() {
-
-		// * Saved on internal memory, as part of the application data
-		// * Cleared by the system if needed
-		// * Goes to the "cache" area of the application data on Android's application data management screen
-		// Equivalent to "/data/data/com.redken.stylestation/cache"
-		// http://developer.android.com/reference/android/content/Context.html#getCacheDir()
-
-		//if (id == "") return context.getCacheDir();
-
-		// If a different id, use a subfolder
-		//File baseFolder = new File(context.getCacheDir(), uniqueId);
-		File baseFolder = new File(context.getCacheDir(), id.length() == 0 ? "none" : id);
-		if (!baseFolder.exists()) baseFolder.mkdir();
-
 		return baseFolder;
-
-		// * Saved on external memory
-		// * Not cleared by the system
-		// * Unavailable when SD card is mounted
-		// * Requires WRITE_EXTERNAL_STORAGE permission
-		// * Doesn't go to the "cache" area of the application data on Android's application data management screen
-		// Equivalent to "/mnt/sdcard/Android/data/com.redken.stylestation/cache"
-		// http://developer.android.com/reference/android/content/Context.html#getExternalCacheDir()
-		//return context.getExternalCacheDir();
-
 	}
 
 	public long getTotalSize() {
