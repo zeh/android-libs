@@ -104,11 +104,24 @@ public class RemoteImageView extends ViewGroup {
 		}
 	}
 
+	protected void removeProgressBar() {
+		if (progressBar != null) {
+			removeView(progressBar);
+			progressBar = null;
+		}
+
+	}
+
 	// ================================================================================================================
 	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
 
 	public void setScaleType(ScaleType __scaleType) {
 		image.setScaleType(__scaleType);
+	}
+
+	public void stopLoading() {
+		removeProgressBar();
+		removeLoader();
 	}
 
 	public void loadRemoteContent(String __imageURL, boolean __useCache) {
@@ -148,10 +161,7 @@ public class RemoteImageView extends ViewGroup {
 				// Create a new bitmap from it
 				image.setImageBitmap(BitmapFactory.decodeByteArray(__loader.getData(), 0, __loader.getData().length));
 
-				// Remove the progress bar
-				removeView(progressBar);
-				progressBar = null;
-
+				removeProgressBar();
 				removeLoader();
 			}
 		});
@@ -200,6 +210,7 @@ public class RemoteImageView extends ViewGroup {
 	public void destroy() {
 		clearImage();
 
+		removeProgressBar();
 		removeLoader();
 		image = null;
 
