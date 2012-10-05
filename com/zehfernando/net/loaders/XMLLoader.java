@@ -1,47 +1,48 @@
 package com.zehfernando.net.loaders;
 
 import com.zehfernando.data.xml.XML;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingCompleteListener;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingErrorListener;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingProgressListener;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingStartListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderCompleteListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderErrorListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderProgressListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderStartListener;
 
 public class XMLLoader {
 
 	// Properties
 	private TextLoader textLoader;
-	private OnXMLLoaderLoadingStartListener onLoadingStartListener;
-	private OnXMLLoaderLoadingErrorListener onLoadingErrorListener;
-	private OnXMLLoaderLoadingProgressListener onLoadingProgressListener;
-	private OnXMLLoaderLoadingCompleteListener onLoadingCompleteListener;
+	private OnXMLLoaderStartListener onStartListener;
+	private OnXMLLoaderErrorListener onErrorListener;
+	private OnXMLLoaderProgressListener onProgressListener;
+	private OnXMLLoaderCompleteListener onCompleteListener;
+	private OnXMLLoaderCancelListener onCancelListener;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
 	public XMLLoader() {
 		textLoader = new TextLoader();
-		textLoader.setOnTextLoaderLoadingStartListener(new OnTextLoaderLoadingStartListener() {
+		textLoader.setOnLoadingStartListener(new OnTextLoaderStartListener() {
 			@Override
-			public void onLoadingStart(TextLoader __loader) {
-				dispatchOnLoadingStart();
+			public void onStart(TextLoader __loader) {
+				dispatchOnStart();
 			}
 		});
-		textLoader.setOnTextLoaderLoadingErrorListener(new OnTextLoaderLoadingErrorListener() {
+		textLoader.setOnLoadingErrorListener(new OnTextLoaderErrorListener() {
 			@Override
-			public void onLoadingError(TextLoader __loader) {
-				dispatchOnLoadingError();
+			public void onError(TextLoader __loader) {
+				dispatchOnError();
 			}
 		});
-		textLoader.setOnTextLoaderLoadingProgressListener(new OnTextLoaderLoadingProgressListener() {
+		textLoader.setOnLoadingProgressListener(new OnTextLoaderProgressListener() {
 			@Override
-			public void onLoadingProgress(TextLoader __loader, int __bytesLoaded, int __bytesTotal) {
-				dispatchOnLoadingProgress();
+			public void onProgress(TextLoader __loader, int __bytesLoaded, int __bytesTotal) {
+				dispatchOnProgress();
 			}
 		});
-		textLoader.setOnTextLoaderLoadingCompleteListener(new OnTextLoaderLoadingCompleteListener() {
+		textLoader.setLoadingCompleteListener(new OnTextLoaderCompleteListener() {
 			@Override
-			public void onLoadingComplete(TextLoader __loader) {
-				dispatchOnLoadingComplete();
+			public void onComplete(TextLoader __loader) {
+				dispatchOnComplete();
 			}
 		});
 	}
@@ -49,24 +50,29 @@ public class XMLLoader {
 	// ================================================================================================================
 	// INTERNAL INTERFACE ---------------------------------------------------------------------------------------------
 
-	protected void dispatchOnLoadingStart() {
+	protected void dispatchOnStart() {
 		// Loading has started, header is known (total bytes, etc)
-		if (onLoadingStartListener != null) onLoadingStartListener.onLoadingStart(this);
+		if (onStartListener != null) onStartListener.onStart(this);
 	}
 
-	protected void dispatchOnLoadingError() {
+	protected void dispatchOnError() {
 		// Loading stopped
-		if (onLoadingErrorListener != null) onLoadingErrorListener.onLoadingError(this);
+		if (onErrorListener != null) onErrorListener.onError(this);
 	}
 
-	protected void dispatchOnLoadingProgress() {
+	protected void dispatchOnProgress() {
 		// Loading progress, loadedBytes has been updated
-		if (onLoadingProgressListener != null) onLoadingProgressListener.onLoadingProgress(this, getLoadedBytes(), getTotalBytes());
+		if (onProgressListener != null) onProgressListener.onProgress(this, getLoadedBytes(), getTotalBytes());
 	}
 
-	protected void dispatchOnLoadingComplete() {
+	protected void dispatchOnComplete() {
 		// Loading is complete
-		if (onLoadingCompleteListener != null) onLoadingCompleteListener.onLoadingComplete(this);
+		if (onCompleteListener != null) onCompleteListener.onComplete(this);
+	}
+
+	protected void dispatchOnCancel() {
+		// Loading has been canceled
+		if (onCancelListener != null) onCancelListener.onCancel(this);
 	}
 
 	protected void clear() {
@@ -86,20 +92,24 @@ public class XMLLoader {
 		clear();
 	}
 
-	public void setOnXMLLoaderLoadingStartListener(OnXMLLoaderLoadingStartListener __listener) {
-		onLoadingStartListener = __listener;
+	public void setOnStartListener(OnXMLLoaderStartListener __listener) {
+		onStartListener = __listener;
 	}
 
-	public void setOnXMLLoaderLoadingErrorListener(OnXMLLoaderLoadingErrorListener __listener) {
-		onLoadingErrorListener = __listener;
+	public void setOnErrorListener(OnXMLLoaderErrorListener __listener) {
+		onErrorListener = __listener;
 	}
 
-	public void setOnXMLLoaderLoadingProgressListener(OnXMLLoaderLoadingProgressListener __listener) {
-		onLoadingProgressListener = __listener;
+	public void setOnProgressListener(OnXMLLoaderProgressListener __listener) {
+		onProgressListener = __listener;
 	}
 
-	public void setOnXMLLoaderLoadingCompleteListener(OnXMLLoaderLoadingCompleteListener __listener) {
-		onLoadingCompleteListener = __listener;
+	public void setOnCompleteListener(OnXMLLoaderCompleteListener __listener) {
+		onCompleteListener = __listener;
+	}
+
+	public void setOnCancelListener(OnXMLLoaderCancelListener __listener) {
+		onCancelListener = __listener;
 	}
 
 	// ================================================================================================================
@@ -132,19 +142,23 @@ public class XMLLoader {
 	// ================================================================================================================
 	// INTERFACE CLASSES ----------------------------------------------------------------------------------------------
 
-	public interface OnXMLLoaderLoadingStartListener {
-		public void onLoadingStart(XMLLoader __loader);
+	public interface OnXMLLoaderStartListener {
+		public void onStart(XMLLoader __loader);
 	}
 
-	public interface OnXMLLoaderLoadingErrorListener {
-		public void onLoadingError(XMLLoader __loader);
+	public interface OnXMLLoaderErrorListener {
+		public void onError(XMLLoader __loader);
 	}
 
-	public interface OnXMLLoaderLoadingProgressListener {
-		public void onLoadingProgress(XMLLoader __loader, int __loadedBytes, int __totalBytes);
+	public interface OnXMLLoaderProgressListener {
+		public void onProgress(XMLLoader __loader, int __loadedBytes, int __totalBytes);
 	}
 
-	public interface OnXMLLoaderLoadingCompleteListener {
-		public void onLoadingComplete(XMLLoader __loader);
+	public interface OnXMLLoaderCompleteListener {
+		public void onComplete(XMLLoader __loader);
+	}
+
+	public interface OnXMLLoaderCancelListener {
+		public void onCancel(XMLLoader __loader);
 	}
 }
