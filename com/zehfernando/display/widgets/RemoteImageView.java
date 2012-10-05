@@ -90,7 +90,7 @@ public class RemoteImageView extends ViewGroup {
 	public FileCache getFileCache() {
 		// Returns the file cache used
 		// Change this to use a private FileCache?
-		return FileCache.getFileCache(fileCacheName);
+		return FileCache.getFileCache(image.getContext(), fileCacheName);
 	}
 
 	protected void removeLoader() {
