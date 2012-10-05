@@ -41,6 +41,10 @@ public class MathUtils {
 		return map(__value, __oldMin, __oldMax, __newMin, __newMax, false);
 	}
 
+	public static int mapRounded(float __value, float __oldMin, float __oldMax, float __newMin, float __newMax) {
+		return Math.round(map(__value, __oldMin, __oldMax, __newMin, __newMax));
+	}
+
 	public static float map(float __value, float __oldMin, float __oldMax, boolean __clamp) {
 		return map(__value, __oldMin, __oldMax, 0, 1, __clamp);
 	}
