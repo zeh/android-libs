@@ -1,7 +1,10 @@
 package com.zehfernando.net.loaders;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -10,6 +13,8 @@ import java.net.URL;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.zehfernando.utils.F;
 
 public class TextLoader {
 
@@ -20,8 +25,9 @@ public class TextLoader {
 	protected static final int MESSAGE_TYPE_PROGRESS = 1;			// Param is: loaded bytes
 	protected static final int MESSAGE_TYPE_COMPLETE = 2;			// No param
 	protected static final int MESSAGE_TYPE_ERROR = 3;				// No param
+	protected static final int MESSAGE_TYPE_CANCELED = 4;			// No param
 
-	protected static final int MESSAGE_TYPE_HEADER = 4;
+	protected static final int MESSAGE_TYPE_HEADER = 5;
 	protected static final int MESSAGE_TYPE_HEADER_LAST_MODIFIED = 0;
 
 	public static final String METHOD_POST = "post";
@@ -45,10 +51,13 @@ public class TextLoader {
 	private LoadingThread loadingThread;
 	private Handler loadingHandler;
 
-	private OnTextLoaderLoadingStartListener onLoadingStartListener;
-	private OnTextLoaderLoadingErrorListener onLoadingErrorListener;
-	private OnTextLoaderLoadingProgressListener onLoadingProgressListener;
-	private OnTextLoaderLoadingCompleteListener onLoadingCompleteListener;
+	private OnTextLoaderStartListener onStartListener;
+	private OnTextLoaderErrorListener onErrorListener;
+	private OnTextLoaderProgressListener onProgressListener;
+	private OnTextLoaderCompleteListener onCompleteListener;
+	private OnTextLoaderCancelListener onCancelListener;
+
+	private RequestContentStreamWriter requestContentStreamWriter;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
@@ -85,6 +94,9 @@ public class TextLoader {
 					case MESSAGE_TYPE_COMPLETE:
 						dispatchOnLoadingComplete();
 						break;
+					case MESSAGE_TYPE_CANCELED:
+						dispatchOnCancel();
+						break;
 					case MESSAGE_TYPE_HEADER:
 						switch(msg.arg2) {
 							case MESSAGE_TYPE_HEADER_LAST_MODIFIED:
@@ -97,6 +109,7 @@ public class TextLoader {
 		};
 
 		loadingThread = new LoadingThread(loadingHandler);
+
 	}
 
 	// ================================================================================================================
@@ -104,26 +117,32 @@ public class TextLoader {
 
 	protected void dispatchOnLoadingStart() {
 		// Loading has started, header is known (total bytes, etc)
-		if (onLoadingStartListener != null) onLoadingStartListener.onLoadingStart(this);
+		if (onStartListener != null) onStartListener.onStart(this);
 	}
 
 	protected void dispatchOnLoadingError() {
 		// Loading stopped
-		if (onLoadingErrorListener != null) onLoadingErrorListener.onLoadingError(this);
+		if (onErrorListener != null) onErrorListener.onError(this);
 	}
 
 	protected void dispatchOnLoadingProgress() {
 		// Loading progress, loadedBytes has been updated
-		if (onLoadingProgressListener != null) onLoadingProgressListener.onLoadingProgress(this, loadedBytes, totalBytes);
+		if (onProgressListener != null) onProgressListener.onProgress(this, loadedBytes, totalBytes);
 	}
 
 	protected void dispatchOnLoadingComplete() {
 		// Loading is complete
-		if (onLoadingCompleteListener != null) onLoadingCompleteListener.onLoadingComplete(this);
+		if (onCompleteListener != null) onCompleteListener.onComplete(this);
+	}
+
+	protected void dispatchOnCancel() {
+		// Loading has been properly stopped after a cancel was called
+		if (onCancelListener != null) onCancelListener.onCancel(this);
 	}
 
 	protected void clear() {
 		loadingHandler = null;
+		requestContentStreamWriter = null;
 		data = null;
 	}
 
@@ -144,25 +163,33 @@ public class TextLoader {
 	}
 
 	public void cancel() {
-		if (loadingThread != null) loadingThread.stop();
+		if (loadingThread != null) {
+			Thread moribund = loadingThread;
+			loadingThread = null;
+			moribund.interrupt();
+		}
 
 		clear();
 	}
 
-	public void setOnTextLoaderLoadingStartListener(OnTextLoaderLoadingStartListener __listener) {
-		onLoadingStartListener = __listener;
+	public void setOnLoadingStartListener(OnTextLoaderStartListener __listener) {
+		onStartListener = __listener;
 	}
 
-	public void setOnTextLoaderLoadingErrorListener(OnTextLoaderLoadingErrorListener __listener) {
-		onLoadingErrorListener = __listener;
+	public void setOnLoadingErrorListener(OnTextLoaderErrorListener __listener) {
+		onErrorListener = __listener;
 	}
 
-	public void setOnTextLoaderLoadingProgressListener(OnTextLoaderLoadingProgressListener __listener) {
-		onLoadingProgressListener = __listener;
+	public void setOnLoadingProgressListener(OnTextLoaderProgressListener __listener) {
+		onProgressListener = __listener;
 	}
 
-	public void setOnTextLoaderLoadingCompleteListener(OnTextLoaderLoadingCompleteListener __listener) {
-		onLoadingCompleteListener = __listener;
+	public void setLoadingCompleteListener(OnTextLoaderCompleteListener __listener) {
+		onCompleteListener = __listener;
+	}
+
+	public void setOnCancelListener(OnTextLoaderCancelListener __listener) {
+		onCancelListener = __listener;
 	}
 
 	// ================================================================================================================
@@ -192,6 +219,10 @@ public class TextLoader {
 		requestContent = __value;
 	}
 
+	public void setRequestContentStreamWriter(RequestContentStreamWriter __requestContentStreamWriter) {
+		requestContentStreamWriter = __requestContentStreamWriter;
+	}
+
 	public String getData() {
 		return data;
 	}
@@ -219,20 +250,32 @@ public class TextLoader {
 	// ================================================================================================================
 	// INTERFACE CLASSES ----------------------------------------------------------------------------------------------
 
-	public interface OnTextLoaderLoadingStartListener {
-		public void onLoadingStart(TextLoader __loader);
+	public interface RequestContentStreamWriter {
+		public void writeToStream(OutputStream __stream);
 	}
 
-	public interface OnTextLoaderLoadingErrorListener {
-		public void onLoadingError(TextLoader __loader);
+	public interface OnTextLoaderStartListener {
+		public void onStart(TextLoader __loader);
 	}
 
-	public interface OnTextLoaderLoadingProgressListener {
-		public void onLoadingProgress(TextLoader __loader, int __loadedBytes, int __totalBytes);
+	public interface OnTextLoaderErrorListener {
+		public void onError(TextLoader __loader);
 	}
 
-	public interface OnTextLoaderLoadingCompleteListener {
-		public void onLoadingComplete(TextLoader __loader);
+	public interface OnTextLoaderProgressListener {
+		public void onProgress(TextLoader __loader, int __loadedBytes, int __totalBytes);
+	}
+
+	public interface OnTextLoaderCompleteListener {
+		public void onComplete(TextLoader __loader);
+	}
+
+	public interface OnTextLoaderCancelListener {
+		public void onCancel(TextLoader __loader);
+	}
+
+	public interface OnTextLoaderHeaderListener {
+		public void onHeader(TextLoader __loader);
 	}
 
 	// ================================================================================================================
@@ -241,7 +284,7 @@ public class TextLoader {
 	private class LoadingThread extends Thread {
 
 		// Properties
-		private Handler handler;
+		private final Handler handler;
 		private boolean isLoading;
 		private boolean isLoaded;
 
@@ -277,16 +320,24 @@ public class TextLoader {
 
 					if (method == TextLoader.METHOD_POST) {
 						// POST
+						Log.i("TextLoader", "Using POST method");
 						connection.setDoOutput(true);
 						if (requestContent.length() > 0) {
-							//Log.v("TextLoader", ">>> ADDING QUERY == " + requestContent);
+							Log.v("TextLoader", "ADDING CONTENT AS QUERY == " + requestContent);
 							OutputStream output = new BufferedOutputStream(connection.getOutputStream());
 							output.write(requestContent.getBytes("UTF-8"));
 							output.flush();
 							output.close();
+						} else if (requestContentStreamWriter != null) {
+							Log.v("TextLoader", "ADDING CONTENT AS OUTPUTSTREAM");
+							connection.setRequestProperty("Connection", "Keep-Alive");
+							requestContentStreamWriter.writeToStream(connection.getOutputStream());
+						} else {
+							Log.v("TextLoader", "NO CONTENT TO SEND!");
 						}
 					} else {
 						// GET
+						Log.i("TextLoader", "Using GET method");
 						connection.setDoInput(true);
 					}
 
@@ -303,41 +354,40 @@ public class TextLoader {
 
 					sendMessage(MESSAGE_TYPE_START, t);
 
-					BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-					//BufferedReader in = new BufferedReader(new InputStreamReader(urlRequest.openStream()));
-					//String str;
-					String finalStr = "";
 
-					char buff[] = new char[2048];
+					InputStream in = new BufferedInputStream(connection.getInputStream());
+					data = "";
+
+					byte buff[] = new byte[1024 * 10];
 					int read = 0;
+					OutputStream output = new ByteArrayOutputStream();
 
-					while ((read = in.read(buff)) != -1) {
+					// http://stackoverflow.com/questions/3562585/cache-online-file-contents-in-string-rather-than-local-file
+					while ((read = in.read(buff)) != -1 && Thread.currentThread() == loadingThread) {
 						l += read;
-						finalStr += new String(buff, 0, read);
+						output.write(buff, 0, read);
 						sendMessage(MESSAGE_TYPE_PROGRESS, Math.min(l, t));
 					}
-
-					// TODO: use a quicker, straight data read instead? http://stackoverflow.com/questions/3562585/cache-online-file-contents-in-string-rather-than-local-file
-//					while ((str = in.readLine()) != null) {
-//						l += str.length() + 2; // This is not correct because it ignores the type of linefeed! Always assumes 2 bytes, which is not correct in unix filesystems
-//						finalStr += str + "\r\n";
-//						sendMessage(MESSAGE_TYPE_PROGRESS, Math.min(l, t));
-//					}
+					data = output.toString();
 
 					in.close();
 
-					data = finalStr.intern();
-					//data = sb.toString();
+					if (Thread.currentThread() == loadingThread) {
 
-					Log.i("TextLoader", "Loading has finished!");
+						Log.i("TextLoader", "Loading has finished!");
 
-					finalStr = "";
-					//str = "";
+						isLoading = false;
+						isLoaded = true;
 
-					isLoading = false;
-					isLoaded = true;
+						sendMessage(MESSAGE_TYPE_COMPLETE);
+					} else {
+						Log.i("TextLoader", "Loading has canceled!");
 
-					sendMessage(MESSAGE_TYPE_COMPLETE);
+						isLoading = false;
+						isLoaded = false;
+
+						sendMessage(MESSAGE_TYPE_CANCELED);
+					}
 
 				} catch (Exception e) {
 					Log.e("TextLoader", "Error loading file! :(");
