@@ -15,6 +15,8 @@ public class CircleList extends View {
 	protected float circleDistance;
 	protected float position;
 	protected boolean roundPosition;
+	protected boolean hideWhenSingleCircle;
+	protected int color;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
@@ -51,6 +53,8 @@ public class CircleList extends View {
 		roundPosition = true;
 		circleRadius = 6 * getResources().getDisplayMetrics().density;
 		circleDistance = Math.round(17 * getResources().getDisplayMetrics().density);
+		hideWhenSingleCircle = true;
+		color = 0xffffff;
 
 //		Log.v("CircleList", "init");
 	}
@@ -59,6 +63,7 @@ public class CircleList extends View {
 		bgCircle = new ShapeDrawable(new OvalShape());
 	}
 
+	@Override
 	protected void onDraw(Canvas canvas) {
 		float w = getWidth();
 		float h = getHeight();
@@ -74,21 +79,21 @@ public class CircleList extends View {
 		// getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
 		// Draw base circles
-		bgCircle.getPaint().setColor(0xffffff);
+		bgCircle.getPaint().setColor(color);
 		bgCircle.getPaint().setAlpha(51);
 
 		for (i = 0; i < numCircles; i++) {
 			cx = (float) (w * 0.5 + i * circleDistance - ((numCircles - 1) * circleDistance) / 2.0);
-			bgCircle.setBounds((int) Math.round(cx - circleRadius), (int) Math.round(cy - circleRadius), (int) Math.round(cx + circleRadius), (int) Math.round(cy + circleRadius));
+			bgCircle.setBounds(Math.round(cx - circleRadius), Math.round(cy - circleRadius), Math.round(cx + circleRadius), Math.round(cy + circleRadius));
 			bgCircle.draw(canvas);
 		}
 
 		// Draw selector
-		bgCircle.getPaint().setColor(0xffffff);
+		bgCircle.getPaint().setColor(color);
 		bgCircle.getPaint().setAlpha(255);
 
 		cx = (float) (w * 0.5 + usePos * circleDistance - ((numCircles - 1) * circleDistance) / 2.0);
-		bgCircle.setBounds((int) Math.round(cx - circleRadius), (int) Math.round(cy - circleRadius), (int) Math.round(cx + circleRadius), (int) Math.round(cy + circleRadius));
+		bgCircle.setBounds(Math.round(cx - circleRadius), Math.round(cy - circleRadius), Math.round(cx + circleRadius), Math.round(cy + circleRadius));
 		bgCircle.draw(canvas);
 	}
 
@@ -104,6 +109,11 @@ public class CircleList extends View {
 		invalidate();
 	}
 
+	public void setColor(int __color) {
+		color = __color;
+		invalidate();
+	}
+
 	public int getNumCircles() {
 		return numCircles;
 	}
@@ -111,6 +121,8 @@ public class CircleList extends View {
 	public void setNumCircles(int __numCircles) {
 		numCircles = __numCircles;
 		invalidate();
+
+		if (hideWhenSingleCircle) setVisibility(numCircles > 1 ? VISIBLE : INVISIBLE);
 	}
 
 	public float getCircleRadius() {
