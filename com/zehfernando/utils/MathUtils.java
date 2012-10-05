@@ -77,14 +77,13 @@ public class MathUtils {
 	 * 	// Result: 2
 	 * </listing>
 	 */
-	// Need a better name?
-//		public static function rangeMod(__value:Number, __min:Number, __pseudoMax:Number): Number {
-//			var range:Number = __pseudoMax - __min;
-//			__value = (__value - __min) % range;
-//			if (__value < 0) __value = range - (-__value % range);
-//			__value += __min;
-//			return __value;
-//	}
+	public static int rangeMod(int __value, int __min, int __pseudoMax) {
+		int range = __pseudoMax - __min;
+		__value = (__value - __min) % range;
+		if (__value < 0) __value = range - (-__value % range);
+		__value += __min;
+		return __value;
+	}
 
 //		public static function random(__min:Number, __max:Number, __rounded:Boolean = false):Number {
 //			var n:Number = __min + (Math.random() * (__max - __min));
