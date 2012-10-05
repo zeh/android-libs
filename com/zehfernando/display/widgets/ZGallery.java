@@ -82,7 +82,8 @@ public class ZGallery extends Gallery {
 	// ================================================================================================================
 	// EVENT INTERFACE ------------------------------------------------------------------------------------------------
 
-	 protected void onScrollChanged(int __l, int __t, int __oldl, int __oldt) {
+	 @Override
+	protected void onScrollChanged(int __l, int __t, int __oldl, int __oldt) {
 		 // Error: never called normally, so fired from computeScroll()
 //		 Log.v("ZGallery", "---------------------------------------------------------------");
 //		 Log.v("ZGallery", "Scrolling from " + __oldl + " to " + __l);
@@ -376,7 +377,7 @@ public class ZGallery extends Gallery {
 //	}
 
 	public void scrollToPrevious() {
-		onFling(null, null, getWidth() * 2, 0);
+		onFling(null, null, getWidth() * 4, 0);
 
 		// This is stupid, but works well, but only works when the gallery has been focused before
 		//photoGallery.onKeyDown(KeyEvent.KEYCODE_DPAD_LEFT, new KeyEvent(0, 0));
@@ -390,7 +391,7 @@ public class ZGallery extends Gallery {
 	}
 
 	public void scrollToNext() {
-		onFling(null, null, -getWidth() * 2, 0);
+		onFling(null, null, -getWidth() * 4, 0);
 	}
 
 //	protected void showPhoto(int __position) {
