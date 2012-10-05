@@ -1,5 +1,6 @@
 package com.zehfernando.data.xml;
 
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 
@@ -16,6 +17,8 @@ import android.util.Log;
 public class XML {
 
 	// Constants
+	public static final String VALUE_BOOLEAN_TRUE = "true";
+	public static final String VALUE_BOOLEAN_FALSE = "false";
 
 	// Properties
 	private String nodeName;
@@ -258,6 +261,10 @@ public class XML {
 			}
 			return txt.intern();
 		}
+	}
+
+	public boolean getTextAsBoolean() {
+		return getText().equalsIgnoreCase(VALUE_BOOLEAN_TRUE);
 	}
 
 	public float getTextAsFloat() {

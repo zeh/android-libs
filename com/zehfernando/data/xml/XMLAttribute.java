@@ -33,6 +33,10 @@ public class XMLAttribute {
 		return text;
 	}
 
+	public boolean getTextAsBoolean() {
+		return getText().equalsIgnoreCase(XML.VALUE_BOOLEAN_TRUE);
+	}
+
 	public float getTextAsFloat() {
 		return Float.parseFloat(getText());
 	}
