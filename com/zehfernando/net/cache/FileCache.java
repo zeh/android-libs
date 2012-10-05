@@ -198,6 +198,13 @@ public class FileCache {
 		return file.lastModified();
 	}
 
+	public boolean touchFile(String __id) {
+		// "Touches" a file, changing its date for today
+		File file = new File(getCacheDir(), getFileName(__id));
+		if (!file.exists()) return false;
+		return file.setLastModified(System.currentTimeMillis());
+	}
+
 	public String getFilePath(String __id) {
 		// Return a direct file location
 		File file = new File(getCacheDir(), getFileName(__id));
