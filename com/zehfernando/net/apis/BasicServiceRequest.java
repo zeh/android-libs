@@ -1,19 +1,28 @@
 package com.zehfernando.net.apis;
 
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
+
 import android.util.Log;
 
 import com.zehfernando.net.loaders.TextLoader;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingCompleteListener;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingErrorListener;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingProgressListener;
-import com.zehfernando.net.loaders.TextLoader.OnTextLoaderLoadingStartListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderCompleteListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderErrorListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderProgressListener;
+import com.zehfernando.net.loaders.TextLoader.OnTextLoaderStartListener;
+import com.zehfernando.net.loaders.TextLoader.RequestContentStreamWriter;
 
-public class BasicServiceRequest {
+public class BasicServiceRequest implements RequestContentStreamWriter {
+
+	protected static final String MULTIPART_BOUNDARY = "---------------------------7da843b2a1b04";
 
 	// Enums
+	protected static final String CONTENT_TYPE_APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+	protected static final String CONTENT_TYPE_MULTIPART_FORM_DATA = "multipart/form-data; boundary=" + MULTIPART_BOUNDARY;
 
 	// Properties
 	protected TextLoader loader;
@@ -25,6 +34,8 @@ public class BasicServiceRequest {
 	protected boolean isLoaded;
 
 	protected HashMap<String, String> requestParameters;
+	protected HashMap<String, InputStream> requestAttachments;
+	protected HashMap<String, String> requestAttachmentsNames;
 
 //			protected var urlRequest:URLRequest;
 	protected String requestMethod;
@@ -38,8 +49,10 @@ public class BasicServiceRequest {
 		// Basic service configuration
 		requestURL = "";
 		requestMethod = TextLoader.METHOD_GET;
-		requestContentType = "application/x-www-form-urlencoded";
+		requestContentType = CONTENT_TYPE_APPLICATION_X_WWW_FORM_URLENCODED;
 		requestParameters = new HashMap<String, String>();
+		requestAttachments = new HashMap<String, InputStream>();
+		requestAttachmentsNames = new HashMap<String, String>();
 
 //		requestMethod = URLRequestMethod.GET;
 //		requestContentType = "application/x-www-form-urlencoded"; // Default
@@ -70,6 +83,9 @@ public class BasicServiceRequest {
 		if (isLoaded) {
 			isLoaded = false;
 			rawResponse = null;
+			requestParameters = null;
+			requestAttachments = null;
+			requestAttachmentsNames = null;
 		}
 	}
 
@@ -83,10 +99,10 @@ public class BasicServiceRequest {
 	}
 
 	protected void removeLoader() {
-		loader.setOnTextLoaderLoadingErrorListener(null);
-		loader.setOnTextLoaderLoadingStartListener(null);
-		loader.setOnTextLoaderLoadingProgressListener(null);
-		loader.setOnTextLoaderLoadingCompleteListener(null);
+		loader.setOnLoadingErrorListener(null);
+		loader.setOnLoadingStartListener(null);
+		loader.setOnLoadingProgressListener(null);
+		loader.setLoadingCompleteListener(null);
 		loader = null;
 	}
 
@@ -96,22 +112,111 @@ public class BasicServiceRequest {
 	protected String getRequestContent() {
 		// Iterate through the parameters hashmap and generate the content
 
-		boolean hasStarted = false;
 		String content = "";
 
-		for (String key:requestParameters.keySet()) {
-			if (hasStarted) content += "&";
+		// TODO: move this to the textLoader class?
 
-			try {
-				content += key + "=" + URLEncoder.encode(requestParameters.get(key), "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-	            Log.e("BasicServiceRequest", "Could not encode value from key " + key + " to UTF-8!");
+		if (requestContentType == CONTENT_TYPE_APPLICATION_X_WWW_FORM_URLENCODED) {
+			// Send as querystrings
+			boolean hasStarted = false;
+			for (String key:requestParameters.keySet()) {
+				if (hasStarted) content += "&";
+
+				try {
+					content += key + "=" + URLEncoder.encode(requestParameters.get(key), "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					Log.e("BasicServiceRequest", "Could not encode value from key " + key + " to UTF-8!");
+				}
+
+				hasStarted = true;
 			}
+		} else if (requestContentType == CONTENT_TYPE_MULTIPART_FORM_DATA) {
+			// Send as encoded multipart data; this will be handled by writeToStream!
 
-			hasStarted = true;
+			content = null;
+
+			Log.v("BasicServiceRequest", "Content is NULL");
 		}
 
 		return content;
+	}
+
+	@Override
+	public void writeToStream(OutputStream __stream) {
+
+		String lineEnd = "\r\n";
+		String twoHyphens = "--";
+		String boundary = MULTIPART_BOUNDARY;
+
+		Log.v("BasicServiceRequest", "Writing content to stream!");
+
+		try {
+			DataOutputStream writer = new DataOutputStream(__stream);
+
+			// http://reecon.wordpress.com/2010/04/25/uploading-files-to-http-server-using-post-android-sdk/
+
+			// Normal fields
+			for (String key:requestParameters.keySet()) {
+				Log.v("BasicServiceRequest", "--> Writing field: " + key + " as " + requestParameters.get(key));
+
+				writer.writeBytes(twoHyphens + boundary + lineEnd);
+				writer.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"" + lineEnd);
+				writer.writeBytes(lineEnd);
+				writer.writeBytes(requestParameters.get(key) + lineEnd);
+			}
+
+			// Files
+			InputStream inputStream;
+			int bytesAvailable, bufferSize, bytesRead;
+			byte[] buffer;
+			int maxBufferSize = 1*1024*1024;
+
+			for (String key:requestAttachments.keySet()) {
+
+				inputStream = requestAttachments.get(key);
+
+				Log.v("BasicServiceRequest", "--> Writing file: " + key + " as " + requestAttachmentsNames.get(key) + " (" + inputStream.available() + " bytes)");
+
+				writer.writeBytes(twoHyphens + boundary + lineEnd);
+				writer.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"; filename=\"" + requestAttachmentsNames.get(key) + "\"" + lineEnd);
+				writer.writeBytes("Content-Type: image/pjpeg" + lineEnd);
+				writer.writeBytes(lineEnd);
+
+				bytesAvailable = inputStream.available();
+				bufferSize = Math.min(bytesAvailable, maxBufferSize);
+				buffer = new byte[bufferSize];
+
+				// Read file
+				bytesRead = inputStream.read(buffer, 0, bufferSize);
+
+				while (bytesRead > 0) {
+					writer.write(buffer, 0, bufferSize);
+					bytesAvailable = inputStream.available();
+					bufferSize = Math.min(bytesAvailable, maxBufferSize);
+					bytesRead = inputStream.read(buffer, 0, bufferSize);
+				}
+
+				writer.writeBytes(lineEnd);
+
+				inputStream.close();
+				inputStream = null;
+
+				// Responses from the server (code and message)
+				//serverResponseCode = connection.getResponseCode();
+				//serverResponseMessage = connection.getResponseMessage();
+			}
+
+			writer.writeBytes(twoHyphens + boundary + lineEnd);
+
+			writer.flush();
+			writer.close();
+			writer = null;
+
+		} catch (Exception __e) {
+			Log.e("BasicServiceRequest", "Exception when trying to upload file! " + __e);
+		}
+
+
 	}
 
 	// ================================================================================================================
@@ -160,36 +265,43 @@ public class BasicServiceRequest {
 //		urlRequest.requestHeaders = getRequestHeaders();
 //		urlRequest.contentType = requestContentType;
 
+		String requestContent = getRequestContent();
+
 		loader = new TextLoader();
 		loader.setMethod(requestMethod);
-		loader.setRequestContent(getRequestContent());
+		if (requestContent != null) {
+			Log.v("BasicServiceRequest", "Setting request content from STRING");
+			loader.setRequestContent(requestContent);
+		} else {
+			Log.v("BasicServiceRequest", "Setting request content as a STREAM WRITER");
+			loader.setRequestContentStreamWriter(this);
+		}
 		loader.setContentType(requestContentType);
 
 		//Log.v("BasicServiceRequest", "Request FROM: " + requestURL);
 		//Log.v("BasicServiceRequest", "Request BY: " + requestMethod);
-		Log.i("BasicServiceRequest", "Request WITH: " + getRequestContent());
 
-		loader.setOnTextLoaderLoadingErrorListener(new OnTextLoaderLoadingErrorListener() {
+		loader.setOnLoadingErrorListener(new OnTextLoaderErrorListener() {
 			@Override
-			public void onLoadingError(TextLoader __loader) {
+			public void onError(TextLoader __loader) {
 				onServiceLoadingError();
 			}
 		});
-		loader.setOnTextLoaderLoadingStartListener(new OnTextLoaderLoadingStartListener() {
+		loader.setOnLoadingStartListener(new OnTextLoaderStartListener() {
 			@Override
-			public void onLoadingStart(TextLoader __loader) {
+			public void onStart(TextLoader __loader) {
 				onServiceLoadingStart();
 			}
 		});
-		loader.setOnTextLoaderLoadingProgressListener(new OnTextLoaderLoadingProgressListener() {
+		loader.setOnLoadingProgressListener(new OnTextLoaderProgressListener() {
 			@Override
-			public void onLoadingProgress(TextLoader __loader, int __loadedBytes, int __totalBytes) {
+			public void onProgress(TextLoader __loader, int __loadedBytes, int __totalBytes) {
 				onServiceLoadingProgress();
 			}
 		});
-		loader.setOnTextLoaderLoadingCompleteListener(new OnTextLoaderLoadingCompleteListener() {
+		loader.setLoadingCompleteListener(new OnTextLoaderCompleteListener() {
 			@Override
-			public void onLoadingComplete(TextLoader __loader) {
+			public void onComplete(TextLoader __loader) {
 				onServiceLoadingComplete();
 			}
 		});
@@ -219,6 +331,13 @@ public class BasicServiceRequest {
 
 	public String getParameter(String __key) {
 		return requestParameters.get(__key);
+	}
+
+	public void setAttachment(String __key, String __filename, InputStream __inputStream) {
+		requestAttachments.put(__key, __inputStream);
+		requestAttachmentsNames.put(__key, __filename);
+
+		// getContentResolver().openInputStream(Uri.parse(parameterImageUri)));
 	}
 
 //	public function get rawRequest():Object {
