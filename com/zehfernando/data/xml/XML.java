@@ -53,7 +53,12 @@ public class XML {
 		namespace = __namespace;
 	}
 
-	// XML xml = new XML(new InputSource(getResources().openRawResource(R.xml.data_main_menu)));
+	// XML xml = new XML(getResources().openRawResource(R.raw.test_file));
+	public XML(InputStream __inputStream) {
+		this(new InputSource(__inputStream));
+	}
+
+	// XML xml = new XML(new InputSource(getResources().openRawResource(R.xml.data_main_menu)));  (doesn't work?)
 	public XML(InputSource __inputSource) {
 		this();
 
@@ -65,7 +70,8 @@ public class XML {
 			xr.setContentHandler(new XMLParseHandler(this));
 			xr.parse(__inputSource);
 		} catch (Exception __e) {
-			Log.e("XML", "Error parsing the XML! " + __e);
+			Log.e("XML", "Error parsing the XML! " + __e + ": " + __e.getCause());
+			__e.printStackTrace();
 		}
 	}
 
@@ -83,8 +89,21 @@ public class XML {
 	}
 
 	// XML xml = new XML("data_main_menu", getBaseContext());
-	public XML(String __xmlResourceIdName, Context __context) {
-		this(__context.getResources().getXml(__context.getResources().getIdentifier(__xmlResourceIdName, "xml", __context.getPackageName())));
+//	public XML(String __xmlResourceIdName, Context __context) {
+//		this(__context.getResources().getXml(__context.getResources().getIdentifier(__xmlResourceIdName, "xml", __context.getPackageName())));
+//	}
+
+	// New factories
+
+	public static XML fromXMLResource(String __xmlResourceIdName, Context __context) {
+		// This works, but is dangerous on low-end devices (low heap size) + Android 2.2 + big XMLs
+		int resId = __context.getResources().getIdentifier(__xmlResourceIdName, "xml", __context.getPackageName());
+		return new XML(__context.getResources().getXml(resId));
+	}
+
+	public static XML fromRawResource(String __rawResourceIdName, Context __context) {
+		int resId = __context.getResources().getIdentifier(__rawResourceIdName, "raw", __context.getPackageName());
+		return new XML(__context.getResources().openRawResource(resId));
 	}
 
 	// ================================================================================================================
