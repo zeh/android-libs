@@ -36,14 +36,13 @@ public class XmlResourceParserHandler {
 		if (currentNodeTree.size() > 0) {
 			// Root XML already exists, so add it
 			node = new XML();
+			node.setNodeName(__inputResource.getName());
 			currentNodeTree.get(currentNodeTree.size()-1).addChild(node);
 		} else {
 			// Root XML doesn't exist, this is the parent
 			node = xml;
+			node.setNodeName(__inputResource.getName());
 		}
-
-		// Create basic node
-		node.setNodeName(__inputResource.getName());
 
 		// Parse attributes
 		int i;

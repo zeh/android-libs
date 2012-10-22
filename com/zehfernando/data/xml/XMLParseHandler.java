@@ -9,10 +9,10 @@ import org.xml.sax.helpers.DefaultHandler;
 public class XMLParseHandler extends DefaultHandler {
 
 	// Content properties
-	protected XML xml;
+	private XML xml;
 
 	// Stage properties
-	protected ArrayList<XML> currentNodeTree;
+	private ArrayList<XML> currentNodeTree;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
@@ -26,39 +26,35 @@ public class XMLParseHandler extends DefaultHandler {
 
 	@Override
 	public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
-//		Log.v("XMLParser", "startElement :: " + localName);
-
-		// Start node
+		// Start a node
 		XML node;
 
-		//Log.v("XMLParser", "namespaceURI " + namespaceURI + ", localName " + localName + ", qName " + qName);
-
 		if (currentNodeTree.size() > 0) {
-			// Root XML already exists, so add it
+			// Root XML already exists, so add to it
 			node = new XML();
+			node.setNodeName(localName);
 			currentNodeTree.get(currentNodeTree.size()-1).addChild(node);
 		} else {
 			// Root XML doesn't exist, this is the parent
 			node = xml;
+			node.setNodeName(localName);
 		}
 
-		// Create basic node
-		node.setNodeName(localName);
-
-		String[] ns = qName.split(":");
-		if (ns.length > 1) node.setNamespace(ns[0]);
-		//Log.v("XMLParser", " ===> " + node.getNamespace());
+		if (qName.indexOf(":", 1) > -1) {
+			String[] ns = qName.split(":");
+			node.setNamespace(ns[0]);
+		}
 
 		// Parse attributes
 		int i;
-		for (i = 0; i < atts.getLength(); i++) {
+		int l = atts.getLength();
+		for (i = 0; i < l; i++) {
 			//Log.v("XMLParser", "  adding attribute to " + node.getNodeName() + " :: " + atts.getLocalName(i) + " = " + atts.getValue(i));
 			node.addAttribute(new XMLAttribute(atts.getLocalName(i), atts.getValue(i)));
 		}
 
 		// Add to current node tree
 		currentNodeTree.add(node);
-
 	}
 
 	@Override
@@ -71,8 +67,7 @@ public class XMLParseHandler extends DefaultHandler {
 	@Override
 	public void characters(char ch[], int start, int length) {
 		//Log.v("XMLParseHandler", "[" + currentNodeTree.get(currentNodeTree.size()-1).getNodeName() + "] characters :: [" + new String(ch, start, length) + "]");
-		String __text = new String(ch, start, length).intern();
-		currentNodeTree.get(currentNodeTree.size()-1).appendText(__text);
+		currentNodeTree.get(currentNodeTree.size()-1).appendText(new String(ch, start, length));
 	}
 
 	@Override
@@ -83,5 +78,7 @@ public class XMLParseHandler extends DefaultHandler {
 	@Override
 	public void endDocument() throws SAXException {
 		// Do some finishing work if needed
+		currentNodeTree = null;
+		xml = null;
 	}
 }

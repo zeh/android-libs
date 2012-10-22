@@ -27,8 +27,8 @@ public class XML {
 
 	private boolean isTextNode;
 
-	private ArrayList<XML> children;
-	private ArrayList<XMLAttribute> attributes;
+	private final ArrayList<XML> children;
+	private final ArrayList<XMLAttribute> attributes;
 
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
@@ -138,30 +138,37 @@ public class XML {
 		namespace = __namespace.intern();
 	}
 
+	// The functions below are somewhat verbose and redundant (they repeat themselves) but they work better for speed's sake
+
 	public XML getChild(String __name) {
 		// Return the first children of a given name
-		ArrayList<XML> filteredChildren = getChildren(__name, 1);
 
-		if (filteredChildren.size() == 0) {
-			Log.e("XML", "Error: trying to read a children named [" + __name + "] that doesn't exist");
-			throw new Error("Error: trying to read a children named [" + __name + "] that doesn't exist");
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i).getNodeName().equals(__name)) return children.get(i);
 		}
 
-		return filteredChildren.get(0);
+		Log.e("XML", "Error: trying to read a children named [" + __name + "] that doesn't exist");
+		throw new Error("Error: trying to read a children named [" + __name + "] that doesn't exist");
 	}
 
 	public XML getChild(String __name, String __defaultText) {
 		// Return the first children of a given name
-		return getChild(__name, new XML(__name, __defaultText));
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i).getNodeName().equals(__name)) return children.get(i);
+		}
+		return new XML(__name, __defaultText);
 	}
 
 	public XML getChild(String __name, XML __defaultXML) {
 		// Return the first children of a given name
-		ArrayList<XML> filteredChildren = getChildren(__name, 1);
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i).getNodeName().equals(__name)) return children.get(i);
+		}
+		return __defaultXML;
+	}
 
-		if (filteredChildren.size() == 0) return __defaultXML;
-
-		return filteredChildren.get(0);
+	public ArrayList<XML> getChildrenRaw() {
+		return children;
 	}
 
 	public ArrayList<XML> getChildren() {
@@ -212,7 +219,11 @@ public class XML {
 
 	public XMLAttribute getAttribute(String __name, String __defaultText) {
 		// Returns one specific attribute
-		return getAttribute(__name, new XMLAttribute(__name, __defaultText));
+		for (int i = 0; i < attributes.size(); i++) {
+			if (attributes.get(i).getName().equals(__name)) return attributes.get(i);
+		}
+
+		return new XMLAttribute(__name, __defaultText);
 	}
 
 	public XMLAttribute getAttribute(String __name, XMLAttribute __defaultAttribute) {
@@ -243,7 +254,6 @@ public class XML {
 
 	public void addAttribute(XMLAttribute __attribute) {
 		attributes.add(__attribute);
-		//Log.v("XML", "  attribute :: " + __attribute.getName() + " = " + __attribute.getValue() + " =-----> " + attributes.size());
 	}
 
 	// ================================================================================================================
@@ -255,11 +265,11 @@ public class XML {
 			return text.intern();
 		} else {
 			// It's a complex node, concatenates everything!
-			String txt = "";
+			StringBuilder txt = new StringBuilder("");
 			for (int i = 0; i < children.size(); i++) {
-				txt += children.get(i).getTextSource();
+				txt.append(children.get(i).getTextSource());
 			}
-			return txt.intern();
+			return txt.toString();
 		}
 	}
 
@@ -290,7 +300,7 @@ public class XML {
 	public void setText(String __text) {
 		if (!isTextNode) {
 			// It's a complex node, reset everything first!
-			children = new ArrayList<XML>();
+			//children = new ArrayList<XML>();
 			isTextNode = true;
 		}
 
@@ -302,40 +312,43 @@ public class XML {
 		// Appends text accordingly.
 		if (isTextNode) {
 			// It's a text node, just concatenates
-			text += __text.intern();
+			text += __text;
 		} else {
 			// It's a complex node, need to create a new text node
-			addTextChild(__text.intern());
+			addTextChild(__text); // .intern()
 		}
 	}
 
 	public String getTextSource() {
 		// Returns the whole XML source
-		String txt = "";
+		StringBuilder txt = new StringBuilder("");
 
 		// Opening tag
 		if (nodeName.length() > 0) {
-			txt += "<" + nodeName;
-			//Log.v("XML", "  concatenating :: " + attributes.size());
-			//txt += " " + attributes.size();
-			for (int i = 0; i < attributes.size(); i++) {
-				//Log.v("XML", "	  --> " + attributes.get(i).getName());
-				txt += " " + attributes.get(i).getName() + "=\"" + attributes.get(i).getText() + "\"";
+			txt.append("<");
+			txt.append(nodeName);
+			int l = attributes.size();
+			for (int i = 0; i < l; i++) {
+				txt.append(" ");
+				txt.append(attributes.get(i).getName());
+				txt.append("=\"");
+				txt.append(attributes.get(i).getText());
+				txt.append("\"");
 			}
-			txt += ">";
+			txt.append(">");
 		}
 
 		// Content
-		txt += getText();
+		txt.append(getText());
 
 		// Closing tag
 		if (nodeName.length() > 0) {
-			txt += "</" + nodeName + ">";
+			txt.append("</");
+			txt.append(nodeName);
+			txt.append(">");
 		}
 
-		return txt;
-
-
+		return txt.toString();
 	}
 
 	public boolean getIsTextNode() {
