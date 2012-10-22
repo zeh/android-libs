@@ -76,6 +76,7 @@ public class XMLLoader {
 	}
 
 	protected void clear() {
+		if (textLoader != null) textLoader.clear();
 		textLoader = null;
 	}
 
