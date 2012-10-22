@@ -68,8 +68,6 @@ public class FileUtils {
 		long total = 0;
 		File[] files = __file.listFiles();
 
-		if (files == null) return -1; // Not a directory
-
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory()) {
 				total += getFolderSize(files[i]);
