@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 
+import android.text.Editable;
 import android.util.Log;
 
 import com.zehfernando.net.loaders.TextLoader;
@@ -15,10 +16,17 @@ import com.zehfernando.net.loaders.TextLoader.OnTextLoaderErrorListener;
 import com.zehfernando.net.loaders.TextLoader.OnTextLoaderProgressListener;
 import com.zehfernando.net.loaders.TextLoader.OnTextLoaderStartListener;
 import com.zehfernando.net.loaders.TextLoader.RequestContentStreamWriter;
+import com.zehfernando.utils.F;
 
 public class BasicServiceRequest implements RequestContentStreamWriter {
 
+	// Constants
+	public static final String VALUE_TRUE = "true";
+	public static final String VALUE_FALSE = "false";
+
 	protected static final String MULTIPART_BOUNDARY = "---------------------------7da843b2a1b04";
+
+	protected static final int    TIMES_TO_RETRY = 2;
 
 	// Enums
 	protected static final String CONTENT_TYPE_APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
@@ -32,6 +40,8 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 
 	protected boolean isLoading;
 	protected boolean isLoaded;
+
+	protected int timesRetried;
 
 	protected HashMap<String, String> requestParameters;
 	protected HashMap<String, InputStream> requestAttachments;
@@ -53,6 +63,8 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 		requestParameters = new HashMap<String, String>();
 		requestAttachments = new HashMap<String, InputStream>();
 		requestAttachmentsNames = new HashMap<String, String>();
+
+		timesRetried = 0;
 
 //		requestMethod = URLRequestMethod.GET;
 //		requestContentType = "application/x-www-form-urlencoded"; // Default
@@ -78,15 +90,17 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 //		return headers;
 //	}
 
-	protected void clearData() {
+	protected void clearResponseData() {
 		// Clear all the loaded data
 		if (isLoaded) {
 			isLoaded = false;
 			rawResponse = null;
-			requestParameters = null;
-			requestAttachments = null;
-			requestAttachmentsNames = null;
 		}
+	}
+	protected void clearRequestData() {
+		requestParameters = null;
+		requestAttachments = null;
+		requestAttachmentsNames = null;
 	}
 
 	protected void stopLoading() {
@@ -106,8 +120,48 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 		loader = null;
 	}
 
+	protected String getRequestURLAndQuerystring() {
+		return getRequestURL() + getRequestQueryString();
+	}
+
+	protected String getRequestURL() {
+		return requestURL;
+	}
+
 	// ================================================================================================================
 	// EXTENDABLE INTERFACE -------------------------------------------------------------------------------------------
+
+	protected String getRequestQueryString() {
+		return getRequestQueryString(false);
+	}
+
+	protected String getRequestQueryString(boolean __ignoreRequestMethod) {
+		// Returns the requested querystring if needed
+
+		// TODO: move this to the textLoader class?
+		if (requestMethod == TextLoader.METHOD_GET || __ignoreRequestMethod) {
+			String content = "";
+			boolean hasStarted = false;
+			for (String key:requestParameters.keySet()) {
+				content += hasStarted ? "&" : "?";
+
+				try {
+					content += key + "=" + URLEncoder.encode(requestParameters.get(key), "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					Log.e("BasicServiceRequest", "Could not encode value from key " + key + " to UTF-8!");
+				}
+
+				hasStarted = true;
+			}
+			return content;
+		}
+
+		return "";
+	}
+
+	protected void setHeaders(TextLoader __loader) {
+		// Set the headers of the loader here
+	}
 
 	protected String getRequestContent() {
 		// Iterate through the parameters hashmap and generate the content
@@ -135,7 +189,7 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 
 			content = null;
 
-			Log.v("BasicServiceRequest", "Content is NULL");
+			F.log("Content is NULL");
 		}
 
 		return content;
@@ -148,7 +202,7 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 		String twoHyphens = "--";
 		String boundary = MULTIPART_BOUNDARY;
 
-		Log.v("BasicServiceRequest", "Writing content to stream!");
+		F.log("Writing content to stream!");
 
 		try {
 			DataOutputStream writer = new DataOutputStream(__stream);
@@ -157,7 +211,7 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 
 			// Normal fields
 			for (String key:requestParameters.keySet()) {
-				Log.v("BasicServiceRequest", "--> Writing field: " + key + " as " + requestParameters.get(key));
+				F.log("--> Writing field: " + key + " as " + requestParameters.get(key));
 
 				writer.writeBytes(twoHyphens + boundary + lineEnd);
 				writer.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"" + lineEnd);
@@ -173,9 +227,14 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 
 			for (String key:requestAttachments.keySet()) {
 
+				if (requestAttachments.get(key) == null) {
+					F.log("--> Skipping file: " + key + " as " + requestAttachmentsNames.get(key));
+					continue;
+				}
+
 				inputStream = requestAttachments.get(key);
 
-				Log.v("BasicServiceRequest", "--> Writing file: " + key + " as " + requestAttachmentsNames.get(key) + " (" + inputStream.available() + " bytes)");
+				F.log("--> Writing file: " + key + " as " + requestAttachmentsNames.get(key) + " (" + inputStream.available() + " bytes)");
 
 				writer.writeBytes(twoHyphens + boundary + lineEnd);
 				writer.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"; filename=\"" + requestAttachmentsNames.get(key) + "\"" + lineEnd);
@@ -222,6 +281,18 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 	// ================================================================================================================
 	// EVENT INTERFACE ------------------------------------------------------------------------------------------------
 
+	private void onServiceLoadingErrorInternal() {
+		if (timesRetried < TIMES_TO_RETRY) {
+			// Error loading; try again
+			F.warn("Error loading the service! Retrying...");
+			timesRetried++;
+			execute();
+		} else {
+			F.error("Too many errors loading the service! Giving up.");
+			onServiceLoadingError();
+		}
+	}
+
 	protected void onServiceLoadingError() {
 		rawResponse = loader.getData();
 
@@ -253,38 +324,27 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 	public void execute() {
 
 		if (isLoading) stopLoading();
-		if (isLoaded) clearData();
+		if (isLoaded) clearResponseData();
 
-//		var vars:URLVariables = getURLVariables();
-//
-//		urlRequest = new URLRequest();
-//
-//		urlRequest.url = requestURL;
-//		urlRequest.method = requestMethod;
-//		urlRequest.data = vars;
-//		urlRequest.requestHeaders = getRequestHeaders();
-//		urlRequest.contentType = requestContentType;
+		isLoading = true;
 
 		String requestContent = getRequestContent();
 
 		loader = new TextLoader();
 		loader.setMethod(requestMethod);
 		if (requestContent != null) {
-			Log.v("BasicServiceRequest", "Setting request content from STRING");
+			//F.log("Setting request content from STRING");
 			loader.setRequestContent(requestContent);
 		} else {
-			Log.v("BasicServiceRequest", "Setting request content as a STREAM WRITER");
+			//F.log("Setting request content as a STREAM WRITER");
 			loader.setRequestContentStreamWriter(this);
 		}
 		loader.setContentType(requestContentType);
 
-		//Log.v("BasicServiceRequest", "Request FROM: " + requestURL);
-		//Log.v("BasicServiceRequest", "Request BY: " + requestMethod);
-
 		loader.setOnLoadingErrorListener(new OnTextLoaderErrorListener() {
 			@Override
 			public void onError(TextLoader __loader) {
-				onServiceLoadingError();
+				onServiceLoadingErrorInternal();
 			}
 		});
 		loader.setOnLoadingStartListener(new OnTextLoaderStartListener() {
@@ -306,12 +366,15 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 			}
 		});
 
-		loader.load(requestURL);
+		setHeaders(loader);
+
+		loader.load(getRequestURLAndQuerystring());
 	}
 
 	public void dispose() {
 		if (isLoading) stopLoading();
-		if (isLoaded) clearData();
+		if (isLoaded) clearResponseData();
+		clearRequestData();
 	}
 
 	// ================================================================================================================
@@ -325,8 +388,24 @@ public class BasicServiceRequest implements RequestContentStreamWriter {
 		requestParameters.put(__key, __value);
 	}
 
+	public void setParameter(String __key, Editable __editableValue) {
+		requestParameters.put(__key, __editableValue.toString());
+	}
+
 	public void setParameter(String __key, int __value) {
 		setParameter(__key, Integer.toString(__value, 10));
+	}
+
+	public void setParameter(String __key, long __value) {
+		setParameter(__key, Long.toString(__value, 10));
+	}
+
+	public void setParameter(String __key, float __value) {
+		setParameter(__key, Float.toString(__value));
+	}
+
+	public void setParameter(String __key, boolean __value) {
+		setParameter(__key, __value ? VALUE_TRUE : VALUE_FALSE);
 	}
 
 	public String getParameter(String __key) {
