@@ -2,10 +2,10 @@ package com.zehfernando.data.config;
 
 import java.util.ArrayList;
 
+import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
-import com.redken.stylestation.ApplicationConstants;
+import com.zehfernando.utils.F;
 
 public class PersistentData {
 
@@ -21,11 +21,10 @@ public class PersistentData {
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
-	public PersistentData(String __name) {
+	public PersistentData(Context __context, String __name) {
 		name = __name;
 		PersistentData.addInstance(this);
-		if (ApplicationConstants.context == null) Log.e("PersistentData", "Error! Context has not been initialized for SharedPreferences instantiation!");
-		preferences = ApplicationConstants.context.getSharedPreferences(__name, 0);
+		preferences = __context.getSharedPreferences(__name, 0);
 	}
 
 	// ================================================================================================================
@@ -35,12 +34,12 @@ public class PersistentData {
 		datas.add(__data);
 	}
 
-	public static PersistentData getInstance() {
-		return getInstance("");
+	public static PersistentData getInstance(Context __context) {
+		return getInstance(__context, "");
 	}
 
-	public static PersistentData getInstance(String __name) {
-		// TODO: use hashmap for speed
+	public static PersistentData getInstance(Context __context, String __name) {
+		// TODO: use hashmap for speed?
 
 		// Looks for one on the list first
 		for (int i = 0; i < datas.size(); i++) {
@@ -49,7 +48,7 @@ public class PersistentData {
 
 		// Doesn't exist, create a new one and return it
 
-		return new PersistentData(__name);
+		return new PersistentData(__context, __name);
 	}
 
 	// ================================================================================================================
