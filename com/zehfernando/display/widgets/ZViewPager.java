@@ -7,6 +7,7 @@ import android.view.MotionEvent;
 
 public class ZViewPager extends ViewPager {
 
+	// Like ViewPager, but with paging enabled/disabled
 	// With help from http://blog.svpino.com/2011/08/disabling-pagingswiping-on-android.html
 
 	// Properties
@@ -57,9 +58,14 @@ public class ZViewPager extends ViewPager {
 	}
 
 	// ================================================================================================================
+	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
+
+
+	// ================================================================================================================
 	// ACCESSOR INTERFACE ---------------------------------------------------------------------------------------------
 
 	public void setPagingEnabled(boolean __enabled) {
 		pagingEnabled = __enabled;
 	}
+
 }
