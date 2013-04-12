@@ -15,8 +15,7 @@ public class PerformanceUtils {
 			String[] toks = load.split(" ");
 
 			long idle1 = Long.parseLong(toks[5]);
-			long cpu1 = Long.parseLong(toks[2]) + Long.parseLong(toks[3]) + Long.parseLong(toks[4])
-				  + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
+			long cpu1 = Long.parseLong(toks[2]) + Long.parseLong(toks[3]) + Long.parseLong(toks[4]) + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
 			try {
 				Thread.sleep(360);
