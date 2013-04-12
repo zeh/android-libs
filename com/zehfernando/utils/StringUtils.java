@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.regex.Pattern;
 
+import android.util.Base64;
 import android.util.Log;
 import android.util.Patterns;
 
@@ -36,8 +37,22 @@ public class StringUtils {
 		return Patterns.EMAIL_ADDRESS.matcher(__email).matches();
 	}
 
+	public static String toBase64(String __text) {
+		return Base64.encodeToString(__text.getBytes(), Base64.NO_WRAP);
+//		try {
+//			return Base64.encodeToString(__text.getBytes("UTF-8"), Base64.DEFAULT);
+//		} catch (UnsupportedEncodingException e) {
+//			F.error("Cannot convert; UnsupportedEncodingException " + e);
+//			return __text;
+//		}
+	}
+
 	public static String capitalizeWords(String __text) {
-		char[] chars = __text.toLowerCase().toCharArray();
+		return capitalizeWords(__text, true);
+	}
+
+	public static String capitalizeWords(String __text, boolean __convertToLowercaseFirst) {
+		char[] chars = __convertToLowercaseFirst ? __text.toLowerCase().toCharArray() : __text.toCharArray();
 		boolean capitalize = true;
 		for (int i = 0; i < chars.length; i++) {
 			if (capitalize && Character.isLetter(chars[i])) {
@@ -93,6 +108,22 @@ public class StringUtils {
 			}
 		}
 		return new String(chars);
+	}
+
+	public static String toStub(String __text) {
+		// Converts text ("Hello World!") to stub text ("hello-world")
+
+		__text = __text.toLowerCase();
+		__text = __text.replace(" ", "-");
+		__text = __text.replace(",", "-");
+		__text = __text.replace(".", "-");
+		__text = __text.replace(":", "-");
+		__text = __text.replace("/", "-");
+		__text = __text.replace("!", "-");
+		__text = __text.replace("--", "-");
+		__text = __text.replace("--", "-");
+
+		return __text;
 	}
 
 	public static String fromStub(String __text) {
