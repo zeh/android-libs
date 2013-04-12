@@ -15,21 +15,18 @@ public class RectView extends View {
 
 	public RectView(Context __context) {
 		super(__context);
-
 		init();
 	}
 
 	public RectView(Context __context, AttributeSet __attrs) {
 		super(__context, __attrs, 0);
-
 		init();
 	}
 
 	public RectView(Context __context, AttributeSet __attrs, int __defStyle) {
 		super(__context);
-	
 		init();
-	}
+}
 
 	// ================================================================================================================
 	// INTERNAL INTERFACE ---------------------------------------------------------------------------------------------
