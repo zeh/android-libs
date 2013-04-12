@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.zehfernando.net.cache.FileCache;
@@ -15,6 +17,7 @@ import com.zehfernando.net.loaders.Loader.OnLoaderLoadingCompleteListener;
 import com.zehfernando.net.loaders.Loader.OnLoaderLoadingErrorListener;
 import com.zehfernando.net.loaders.Loader.OnLoaderLoadingProgressListener;
 import com.zehfernando.net.loaders.Loader.OnLoaderLoadingStartListener;
+import com.zehfernando.utils.F;
 
 public class ImageLoader {
 
@@ -35,9 +38,12 @@ public class ImageLoader {
 	protected Boolean isLocal;
 	protected Boolean highPriority;					// If true, AND it's local, it loads it immediately instead of in a separate thread
 	protected String cacheName;
+	protected long expirationTime;					// Time to expire, in ms; if 0, never expires
 
 	// Instances
 	protected Loader loader;
+
+	private final HashMap<String, String> headers;
 
 	// Properties
 	protected OnRemoteImageLoaderLoadingStartListener onLoadingStartListener;
@@ -48,11 +54,11 @@ public class ImageLoader {
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
-	public ImageLoader(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority) {
-		this(__imageView, __uri, __skipCache, __highPriority, "");
+	public ImageLoader(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority, long __expirationTime) {
+		this(__imageView, __uri, __skipCache, __highPriority, __expirationTime, "", null);
 	}
 
-	public ImageLoader(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority, String __cacheName) {
+	public ImageLoader(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority, long __expirationTime, String __cacheName, HashMap<String,String> __headers) {
 		imageView = __imageView;
 		uri = __uri;
 		skipCache = __skipCache;
@@ -60,19 +66,34 @@ public class ImageLoader {
 		triesLeft = MAX_TRIES;
 		isLocal = __uri.indexOf("http://") != 0 && __uri.indexOf("https://") != 0;
 		cacheName = __cacheName;
+		expirationTime = __expirationTime;
 		loaders.add(this);
+		headers = new HashMap<String, String>();
+
+		if (__headers != null) {
+			Iterator it = __headers.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry pairs = (Map.Entry)it.next();
+				headers.put(pairs.getKey().toString(), pairs.getValue().toString());
+				//it.remove();
+			}
+		}
 	}
 
 	// ================================================================================================================
 	// PUBLIC STATIC INTERFACE ----------------------------------------------------------------------------------------
 
-	public static boolean load(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority, String __cacheName) {
+	public static boolean load(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority, long __expirationTime, String __cacheName) {
+		return load(__imageView, __uri, __skipCache, __highPriority, __expirationTime, __cacheName, null);
+	}
+
+	public static boolean load(ImageView __imageView, String __uri, Boolean __skipCache, Boolean __highPriority, long __expirationTime, String __cacheName, HashMap<String,String> __headers) {
 		// Loads the image from __url into __imageView
 		// Returns true if already loaded
 
-		Log.i("ImageLoader", "Loading " + __uri);
+		//F.info("Loading " + __uri);
 
-		ImageLoader loader = new ImageLoader(__imageView, __uri, __skipCache, __highPriority, __cacheName);
+		ImageLoader loader = new ImageLoader(__imageView, __uri, __skipCache, __highPriority, __expirationTime, __cacheName, __headers);
 		return loader.start();
 	}
 
@@ -80,7 +101,7 @@ public class ImageLoader {
 		// Stops loading anything into __imageView
 
 		ImageLoader loader = getRemoteImageLoader(__imageView);
-		//if (loader != null) Log.v("ImageLoader", "Loading will be destroyed ==================================> " + loader.getURL());
+		//if (loader != null) F.log("Loading will be destroyed ==================================> " + loader.getURL());
 		if (loader != null) destroyRemoteImageLoader(loader);
 	}
 
@@ -117,8 +138,7 @@ public class ImageLoader {
 	protected static void destroyRemoteImageLoader(ImageLoader __loader) {
 		__loader.stop();
 		loaders.remove(__loader);
-
-		Log.i("ImageLoader", "Cleaned ImageLoader; Remaining image loaders: " + loaders.size());
+		F.debug("Cleaned ImageLoader; Remaining image loaders: " + loaders.size());
 	}
 
 	// ================================================================================================================
@@ -160,7 +180,7 @@ public class ImageLoader {
 			// Check if the image exists in the cache first
 			if (getCache().getFileExists(uri)) {
 				// Already exists! Use cached image
-				//imageView.setImageBitmap(BitmapFactory.decodeStream(getCache().getFile(url)));
+				//F.info("Image is already cached; used cached version");
 				uri = getCache().getFilePath(uri);
 				isLocal = true;
 				start();
@@ -176,6 +196,15 @@ public class ImageLoader {
 		if (isLocal && uri.indexOf(LOCAL_PREFFIX) != 0) uri = LOCAL_PREFFIX + uri;
 
 		loader = new Loader();
+
+		// Set headers
+		Iterator it = headers.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pairs = (Map.Entry)it.next();
+			loader.addHeader(pairs.getKey().toString(), pairs.getValue().toString());
+			//it.remove();
+		}
+
 		loader.setOnLoaderLoadingStartListener(new OnLoaderLoadingStartListener() {
 			@Override
 			public void onLoaderLoadingStart(Loader __loader) {
@@ -186,11 +215,11 @@ public class ImageLoader {
 			@Override
 			public void onLoaderLoadingError(Loader __loader) {
 				if (triesLeft > 0) {
-					Log.w("ImageLoader", "Error loading image [" + uri + "] trying again (" + triesLeft + " tries left)");
+					F.warn("Error loading image [" + uri + "] trying again (" + triesLeft + " tries left)");
 					stop();
 					start();
 				} else {
-					Log.e("ImageLoader", "--> FINAL ERROR loading image");
+					F.error("--> FINAL ERROR loading image");
 					dispatchOnLoadingError();
 					destroyRemoteImageLoader(ImageLoader.this);
 				}
@@ -207,7 +236,10 @@ public class ImageLoader {
 			public void onLoaderLoadingComplete(Loader __loader) {
 				// Loading complete
 				// Save the image to the cache if allowed
-				if (!skipCache && !isLocal) getCache().putFile(uri, __loader.getData());
+				if (!skipCache && !isLocal) {
+					getCache().putFile(uri, __loader.getData());
+					if (expirationTime > 0) getCache().setFileExpirationTimeRelativeToNow(uri, expirationTime);
+				}
 
 				// Create a new bitmap from it
 				imageView.setImageBitmap(BitmapFactory.decodeByteArray(__loader.getData(), 0, __loader.getData().length));
@@ -228,12 +260,12 @@ public class ImageLoader {
 		try {
 			imageView.setImageBitmap(BitmapFactory.decodeStream(new FileInputStream(new File(uri))));
 		} catch (FileNotFoundException e) {
-			Log.e("ImageLoader", "File not found when trying to load local file with high priority: " + uri);
+			F.error("File not found when trying to load local file with high priority: " + uri);
 			dispatchOnLoadingError();
 			destroyRemoteImageLoader(this);
 			return;
 		} catch (OutOfMemoryError e) {
-			Log.e("ImageLoader", "Out of memory trying to load image: " + uri);
+			F.error("Out of memory trying to load image: " + uri);
 			dispatchOnLoadingError();
 			destroyRemoteImageLoader(this);
 			return;
