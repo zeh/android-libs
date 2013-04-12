@@ -59,25 +59,28 @@ public class XMLParseHandler extends DefaultHandler {
 
 	@Override
 	public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
-//		Log.v("XMLParser", "endElement :: " + localName);
+//		F.log("@@@@@@@> End element " + localName);
 		currentNodeTree.remove(currentNodeTree.size()-1);
 	}
 
 	// ch is "<tag>characters</tag>"
 	@Override
 	public void characters(char ch[], int start, int length) {
+//		F.log("@@@@@@@> characters");
 		//Log.v("XMLParseHandler", "[" + currentNodeTree.get(currentNodeTree.size()-1).getNodeName() + "] characters :: [" + new String(ch, start, length) + "]");
 		currentNodeTree.get(currentNodeTree.size()-1).appendText(new String(ch, start, length));
 	}
 
 	@Override
 	public void startDocument() throws SAXException {
-		currentNodeTree = new ArrayList<XML>();
+		//F.log("@@@@@@@> Start document");
+		currentNodeTree = new ArrayList<XML>(0);
 	}
 
 	@Override
 	public void endDocument() throws SAXException {
 		// Do some finishing work if needed
+		//F.log("@@@@@@@> End document");
 		currentNodeTree = null;
 		xml = null;
 	}

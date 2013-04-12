@@ -14,8 +14,8 @@ public class XMLAttribute {
 	}
 
 	public XMLAttribute(String __name, String __value) {
-		name = __name.intern();
-		text = __value.intern();
+		name = __name;
+		text = __value;
 	}
 
 	// ================================================================================================================
@@ -26,7 +26,7 @@ public class XMLAttribute {
 	}
 
 	public void setName(String __name) {
-		name = __name.intern();
+		name = __name;
 	}
 
 	public String getText() {
@@ -58,6 +58,6 @@ public class XMLAttribute {
 	}
 
 	public void setText(String __value) {
-		text = __value.intern();
+		text = __value;
 	}
 }
