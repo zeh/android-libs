@@ -48,20 +48,20 @@ import com.zehfernando.utils.F;
 public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 	private final String TAG = "VideoView";
 	// settable by the client
-	private Uri		 mUri;
-	private int		 mDuration;
+	private Uri	mUri;
+	private int	mDuration;
 
 	// all possible internal states
-	private static final int STATE_ERROR			  = -1;
-	private static final int STATE_IDLE			   = 0;
-	private static final int STATE_PREPARING		  = 1;
-	private static final int STATE_PREPARED		   = 2;
-	private static final int STATE_PLAYING			= 3;
-	private static final int STATE_PAUSED			 = 4;
-	private static final int STATE_PLAYBACK_COMPLETED = 5;
-	private static final int STATE_SUSPEND			= 6;
-	private static final int STATE_RESUME			 = 7;
-	private static final int STATE_SUSPEND_UNSUPPORTED = 8;
+	private static final int STATE_ERROR				= -1;
+	private static final int STATE_IDLE					= 0;
+	private static final int STATE_PREPARING			= 1;
+	private static final int STATE_PREPARED				= 2;
+	private static final int STATE_PLAYING				= 3;
+	private static final int STATE_PAUSED				= 4;
+	private static final int STATE_PLAYBACK_COMPLETED	= 5;
+	private static final int STATE_SUSPEND				= 6;
+	private static final int STATE_RESUME				= 7;
+	private static final int STATE_SUSPEND_UNSUPPORTED	= 8;
 
 	// mCurrentState is a VideoView object's current state.
 	// mTargetState is the state that a method caller intends to reach.
@@ -72,26 +72,26 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 	private int mTargetState  = STATE_IDLE;
 
 	// All the stuff we need for playing and showing a video
-	private SurfaceHolder mSurfaceHolder = null;
-	private MediaPlayer mMediaPlayer = null;
-	private int		 mVideoWidth;
-	private int		 mVideoHeight;
-	private int		 mSurfaceWidth;
-	private int		 mSurfaceHeight;
-	private MediaController mMediaController;
-	private OnCompletionListener mOnCompletionListener;
-	private OnBufferedListener mOnBufferedListener;
-	private MediaPlayer.OnPreparedListener mOnPreparedListener;
-	private MediaPlayer.OnSeekCompleteListener mOnSeekCompleteListener;
-	private MediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener;
-	private int		 mCurrentBufferPercentage;
-	private OnErrorListener mOnErrorListener;
-	private int		 mSeekWhenPrepared;  // recording the seek position while preparing
-	private boolean	 mCanPause;
-	private boolean	 mCanSeekBack;
-	private boolean	 mCanSeekForward;
-	private boolean _prepareAsynchronously;
-	//private int		 mStateWhenSuspended;  //state before calling suspend()
+	private SurfaceHolder	mSurfaceHolder = null;
+	private MediaPlayer		mMediaPlayer = null;
+	private int				mVideoWidth;
+	private int				mVideoHeight;
+	private int				mSurfaceWidth;
+	private int				mSurfaceHeight;
+	private MediaController							mMediaController;
+	private OnCompletionListener					mOnCompletionListener;
+	private OnBufferedListener						mOnBufferedListener;
+	private MediaPlayer.OnPreparedListener			mOnPreparedListener;
+	private MediaPlayer.OnSeekCompleteListener		mOnSeekCompleteListener;
+	private MediaPlayer.OnBufferingUpdateListener	mOnBufferingUpdateListener;
+	private int				mCurrentBufferPercentage;
+	private OnErrorListener	mOnErrorListener;
+	private int				mSeekWhenPrepared;		// recording the seek position while preparing
+	private boolean			mCanPause;
+	private boolean			mCanSeekBack;
+	private boolean			mCanSeekForward;
+	private boolean			_prepareAsynchronously;
+	//private int			mStateWhenSuspended;	//state before calling suspend()
 
 	private boolean mustPauseOnSeek = false;
 
@@ -312,8 +312,7 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 			// Get the capabilities of the player for this stream
 			// [zeh] -- START
 			/*
-			Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL,
-									  MediaPlayer.BYPASS_METADATA_FILTER);
+			Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL, MediaPlayer.BYPASS_METADATA_FILTER);
 
 			if (data != null) {
 				mCanPause = !data.has(Metadata.PAUSE_AVAILABLE)
@@ -348,11 +347,11 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 						start(_isBeingBuffered);
 						if (mMediaController != null) mMediaController.show();
 					} else if (!isPlaying() && (seekToPosition != 0 || getCurrentPosition() > 0)) {
-					   if (mMediaController != null) {
-						   // Show the media controls when we're paused into a video and make 'em stick.
-						   mMediaController.show(0);
-					   }
-				   }
+						if (mMediaController != null) {
+							// Show the media controls when we're paused into a video and make 'em stick.
+							mMediaController.show(0);
+						}
+					}
 				}
 			} else {
 				// We don't know the video size yet, but should start anyway.
@@ -557,8 +556,7 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 		{
 			mSurfaceHolder = holder;
 			//resume() was called before surfaceCreated()
-			if (mMediaPlayer != null && mCurrentState == STATE_SUSPEND
-				   && mTargetState == STATE_RESUME) {
+			if (mMediaPlayer != null && mCurrentState == STATE_SUSPEND && mTargetState == STATE_RESUME) {
 				mMediaPlayer.setDisplay(mSurfaceHolder);
 				resume();
 			} else {
@@ -727,14 +725,14 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 			}
 			return;
 		}
-	   	// [zeh] -- END
+		// [zeh] -- END
 		*/
 		if (mCurrentState == STATE_SUSPEND_UNSUPPORTED) {
 			openVideo();
 		}
 	}
 
-   // cache duration as mDuration for faster access
+	// Cache duration as mDuration for faster access
 	@Override
 	public int getDuration() {
 		if (isInPlaybackState()) {
