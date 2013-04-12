@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.redkenfb.stylestation.ApplicationConstants;
-
+import android.os.Debug;
 import android.util.Log;
 
 public class FileUtils {
@@ -49,7 +48,7 @@ public class FileUtils {
 
 			if (files != null) {
 				for (int i = 0; i < files.length; i++) {
-					if (ApplicationConstants.IS_DEBUGGING) bytesDeleted += files[i].length();
+					if (Debug.isDebuggerConnected()) bytesDeleted += files[i].length();
 					filesDeleted++;
 					files[i].delete();
 				}
