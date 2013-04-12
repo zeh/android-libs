@@ -14,6 +14,8 @@ import com.zehfernando.utils.MathUtils;
 
 public class ZGallery extends Gallery {
 
+	// This is deprecated.
+
 	// Properties
 	protected float _unselectedAlpha;
 	protected float _positionX; // Current position as a float from 0 [first item focused] to (number of items-1) [last item focused]
@@ -404,22 +406,22 @@ public class ZGallery extends Gallery {
 //	}
 
 	/*
-    boolean movePrevious() {
-        if (mItemCount > 0 && mSelectedPosition > 0) {
-            scrollToChild(mSelectedPosition - mFirstPosition - 1);
-            return true;
-        } else {
-            return false;
-        }
-    }
+	boolean movePrevious() {
+		if (mItemCount > 0 && mSelectedPosition > 0) {
+			scrollToChild(mSelectedPosition - mFirstPosition - 1);
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    boolean moveNext() {
-        if (mItemCount > 0 && mSelectedPosition < mItemCount - 1) {
-            scrollToChild(mSelectedPosition - mFirstPosition + 1);
-            return true;
-        } else {
-            return false;
-        }
-    }
+	boolean moveNext() {
+		if (mItemCount > 0 && mSelectedPosition < mItemCount - 1) {
+			scrollToChild(mSelectedPosition - mFirstPosition + 1);
+			return true;
+		} else {
+			return false;
+		}
+	}
 	 */
 }
