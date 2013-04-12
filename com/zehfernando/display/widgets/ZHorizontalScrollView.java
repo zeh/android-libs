@@ -5,8 +5,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.HorizontalScrollView;
 
-import com.zehfernando.display.widgets.listeners.ZHorizontalScrollViewListener;
-
 public class ZHorizontalScrollView extends HorizontalScrollView {
 
 	/*
@@ -50,6 +48,10 @@ public class ZHorizontalScrollView extends HorizontalScrollView {
 
 	public void setOnScrollViewListener(ZHorizontalScrollViewListener __scrollViewListener) {
 		scrollViewListener = __scrollViewListener;
+	}
+
+	public interface ZHorizontalScrollViewListener {
+		public void onScrollChanged(ZHorizontalScrollView scrollView, int x, int y, int oldx, int oldy);
 	}
 
 	// ================================================================================================================
