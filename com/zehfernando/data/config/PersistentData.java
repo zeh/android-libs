@@ -2,6 +2,9 @@ package com.zehfernando.data.config;
 
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -54,9 +57,9 @@ public class PersistentData {
 	// ================================================================================================================
 	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
 
-	public void putBoolean(String __key, Boolean __value) {
+	public void clear() {
 		SharedPreferences.Editor editor = preferences.edit();
-		editor.putBoolean(__key, __value);
+		editor.clear();
 		editor.commit();
 	}
 
@@ -68,9 +71,9 @@ public class PersistentData {
 		return preferences.getBoolean(__key, __default);
 	}
 
-	public void putString(String __key, String __value) {
+	public void putBoolean(String __key, Boolean __value) {
 		SharedPreferences.Editor editor = preferences.edit();
-		editor.putString(__key, __value);
+		editor.putBoolean(__key, __value);
 		editor.commit();
 	}
 
@@ -81,6 +84,78 @@ public class PersistentData {
 	public String getString(String __key, String __default) {
 		return preferences.getString(__key, __default);
 	}
+
+	public void putString(String __key, String __value) {
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putString(__key, __value);
+		editor.commit();
+	}
+
+	public void putJSONArray(String __key, JSONArray __array) {
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putString(__key, __array.toString());
+		//F.log("====> SAVING ARRAY! " + __array.toString());
+		editor.commit();
+	}
+
+	public JSONArray getJSONArray(String __key) {
+		try {
+			//F.log("===> READING ARRAY! " + preferences.getString(__key, ""));
+			return new JSONArray(preferences.getString(__key, ""));
+		} catch (JSONException __e) {
+			F.warn("CANNOT READ JSON ARRAY!");
+			return new JSONArray();
+		}
+	}
+
+	public long getLong(String __key) {
+		return getLong(__key, 0L);
+	}
+
+	public long getLong(String __key, long __default) {
+		return preferences.getLong(__key, __default);
+	}
+
+	public void putLong(String __key, long __value) {
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putLong(__key, __value);
+		editor.commit();
+	}
+
+	public float getFloat(String __key) {
+		return getFloat(__key, 0);
+	}
+
+	public float getFloat(String __key, float __default) {
+		return preferences.getFloat(__key, __default);
+	}
+
+	public void putFloat(String __key, float __value) {
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putFloat(__key, __value);
+		editor.commit();
+	}
+
+	public int getInt(String __key) {
+		return getInt(__key, 0);
+	}
+
+	public int getInt(String __key, int __default) {
+		return preferences.getInt(__key, __default);
+	}
+
+	public void putInt(String __key, int __value) {
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putInt(__key, __value);
+		editor.commit();
+	}
+
+	public void remove(String __key) {
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.remove(__key);
+		editor.commit();
+	}
+
 
 	// ================================================================================================================
 	// ACCESSOR INTERFACE ---------------------------------------------------------------------------------------------
