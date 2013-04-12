@@ -89,7 +89,6 @@ public class XMLLoader {
 
 	public void cancel() {
 		if (textLoader != null) textLoader.cancel();
-
 		clear();
 	}
 
