@@ -6,9 +6,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import android.os.AsyncTask;
-import android.util.Log;
+
+import com.zehfernando.utils.F;
 
 public class Loader {
 
@@ -30,6 +34,8 @@ public class Loader {
 	private OnLoaderLoadingProgressListener onLoaderLoadingProgressListener;
 	private OnLoaderLoadingCompleteListener onLoaderLoadingCompleteListener;
 
+	private final HashMap<String,String> headers;
+
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
@@ -43,6 +49,7 @@ public class Loader {
 
 		downloadTask = null;
 
+		headers = new HashMap<String, String>();
 	}
 
 	// ================================================================================================================
@@ -96,24 +103,25 @@ public class Loader {
 	protected void clear() {
 		downloadTask = null;
 		data = null;
+		isLoaded = false;
 	}
 
 	// ================================================================================================================
 	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
 
 	public void load(String __url) {
+		cancel();
+
 		url = __url;
 
-		Log.i("Loader", "Loading image: " + __url);
-
-		// TODO: unload if it already exists
+		F.debug("Loading image: " + __url);
 
 		URL fileURL = null;
 
 		try {
 			fileURL = new URL(url);
 		} catch (MalformedURLException e) {
-			Log.v("Loader", "Malformed URL " + url);
+			F.error("Malformed URL " + url);
 			e.printStackTrace();
 		}
 
@@ -129,8 +137,17 @@ public class Loader {
 
 	}
 
+	public void addHeader(String __key, String __value) {
+		headers.put(__key, __value);
+	}
+
 	public void cancel() {
-		if (downloadTask != null) downloadTask.cancel(true);
+		if (downloadTask != null) {
+			downloadTask.cancel(true);
+			downloadTask = null;
+		}
+
+		isLoading = false;
 
 		clear();
 	}
@@ -200,6 +217,7 @@ public class Loader {
 
 		protected boolean calledOnStart = false;	// Whether it was already called once or not
 
+		@Override
 		protected byte[] doInBackground(URL... urls) {
 			// Invoked on background thread
 
@@ -215,7 +233,17 @@ public class Loader {
 			try {
 				URLConnection connection = fileURL.openConnection();
 				connection.setDoInput(true); // Probably not necessary?
+
+				// Set headers
+				Iterator it = headers.entrySet().iterator();
+				while (it.hasNext()) {
+					Map.Entry pairs = (Map.Entry)it.next();
+					connection.setRequestProperty(pairs.getKey().toString(), pairs.getValue().toString());
+					//it.remove();
+				}
+
 				connection.setConnectTimeout(3000);
+				connection.setRequestProperty("Accept","*/*");
 				connection.connect();
 				inputStream = connection.getInputStream();
 
@@ -226,7 +254,7 @@ public class Loader {
 
 				totalBytes = connection.getContentLength();
 			} catch (IOException __e) {
-				Log.e("Loader", " ===> IOException while trying to open remote file [" + urls[0] + "]! " + __e);
+				F.error(" ===> IOException while trying to open remote file [" + urls[0] + "]! " + __e);
 				return null;
 			}
 
@@ -245,7 +273,7 @@ public class Loader {
 				}
 				buffer.flush();
 			} catch (IOException __e) {
-				Log.e("Loader", " ===> IOException while trying to read remote file! " + __e);
+				F.error(" ===> IOException while trying to read remote file! " + __e);
 				return null;
 			}
 
@@ -256,6 +284,7 @@ public class Loader {
 			return buffer.toByteArray();
 		}
 
+		@Override
 		protected void onProgressUpdate(Integer... __loadedBytes) {
 			// Invoked on UI thread
 			if (!calledOnStart) {
@@ -269,6 +298,7 @@ public class Loader {
 			}
 		}
 
+		@Override
 		protected void onPostExecute(byte[] __output) {
 			// Invoked on UI thread
 			if (__output == null) {
@@ -279,6 +309,7 @@ public class Loader {
 			//Log.v("Loader", " ===> Completed!");
 		}
 
+		@Override
 		protected void onCancelled() {
 			// Invoked on UI thread
 			//Log.v("Loader", " ===> Cancelled!");
