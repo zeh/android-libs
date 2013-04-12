@@ -75,4 +75,16 @@ public class ShareUtils {
 		return attachmentDir;
 		//return __context.getCacheDir() + "/attachment";
 	}
+
+	public static void shareURL(Context __context, String __dialogTitle, String __subject, String __url) {
+		shareText(__context, __dialogTitle, __subject, __url);
+	}
+
+	public static void shareText(Context __context, String __dialogTitle, String __subject, String __body) {
+		Intent i = new Intent(Intent.ACTION_SEND);
+		i.setType("text/plain");
+		i.putExtra(Intent.EXTRA_SUBJECT, __subject);
+		i.putExtra(Intent.EXTRA_TEXT, __body);
+		__context.startActivity(Intent.createChooser(i, __dialogTitle));
+	}
 }
