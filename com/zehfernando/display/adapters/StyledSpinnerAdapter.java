@@ -7,8 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.redken.stylestation.R;
-
 public class StyledSpinnerAdapter extends ArrayAdapter<String> {
 
 	// Properties
@@ -44,17 +42,18 @@ public class StyledSpinnerAdapter extends ArrayAdapter<String> {
 		View row = inflater.inflate(resourceId, __parent, false);
 
 		Object item = getItem(__position);
-        if (item instanceof CharSequence) {
-        	getTextView(row).setText((CharSequence)item);
-        } else {
-        	getTextView(row).setText(item.toString());
-        }
+		if (item instanceof CharSequence) {
+			getTextView(row).setText((CharSequence)item);
+		} else {
+			getTextView(row).setText(item.toString());
+		}
 
 		return row;
 	}
 
 	public TextView getTextView(View __view) {
 		// TODO: actually look for the textview, instead of using an arbitrary text id
-		return (TextView) __view.findViewById(R.id.textItem);
+		return null;
+		//return (TextView) __view.findViewById(R.id.textItem);
 	}
 }
