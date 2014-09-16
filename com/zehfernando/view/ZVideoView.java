@@ -171,6 +171,7 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 		return result;
 }
 
+	@SuppressWarnings("deprecation")
 	private void initVideoView() {
 		mVideoWidth = 0;
 		mVideoHeight = 0;
@@ -814,4 +815,14 @@ public class ZVideoView extends SurfaceView implements MediaPlayerControl {
 	public void setPrepareAsynchronously(boolean __value) {
 		_prepareAsynchronously = __value;
 	}
+
+	/**
+	 * Lee: Added this required method in order to compile in API 19,
+	 * but this is not implemented fyi
+	 */
+	// @Override
+	public int getAudioSessionId() {
+		return 0;
+	}
+
 }
