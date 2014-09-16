@@ -44,11 +44,12 @@ public class CircleView extends View {
 		color = 0xffffff;
 		alpha = 1;
 
-		circle = new ShapeDrawable(new OvalShape());
+		if (!isInEditMode()) circle = new ShapeDrawable(new OvalShape());
 
 		setDrawingCacheEnabled(true);
 	}
 
+	@Override
 	protected void onDraw(Canvas canvas) {
 		float w = getWidth();
 		float h = getHeight();
@@ -56,11 +57,13 @@ public class CircleView extends View {
 		float cy = h * 0.5F;
 		float r = Math.min(cx,  cy);
 
-		circle.getPaint().setColor(color);
-		circle.getPaint().setAlpha(Math.round(alpha * 255));
+		if (circle != null) {
+			circle.getPaint().setColor(color);
+			circle.getPaint().setAlpha(Math.round(alpha * 255));
 
-		circle.setBounds(Math.round(cx - r), Math.round(cy - r), Math.round(cx + r), Math.round(cy + r));
-		circle.draw(canvas);
+			circle.setBounds(Math.round(cx - r), Math.round(cy - r), Math.round(cx + r), Math.round(cy + r));
+			circle.draw(canvas);
+		}
 	}
 
 //	@Override
@@ -91,11 +94,13 @@ public class CircleView extends View {
 		return color;
 	}
 
+	@Override
 	public void setAlpha(float __alpha) {
 		alpha = __alpha;
 		invalidate();
 	}
 
+	@Override
 	public float getAlpha() {
 		return alpha;
 	}
