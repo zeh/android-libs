@@ -1,5 +1,7 @@
 package com.zehfernando.utils;
 
+import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -57,6 +59,23 @@ public class JSONUtils {
 			long[] list = new long[array.length()];
 			for (int i = 0; i < array.length(); i++) {
 				list[i] = array.optLong(i, 0);
+			}
+			return list;
+		}
+	}
+
+	public static ArrayList<Long> getLongArrayList(JSONObject __object, String __key) {
+		return getLongArrayList(__object, __key, new ArrayList<Long>());
+	}
+
+	public static ArrayList<Long> getLongArrayList(JSONObject __object, String __key, ArrayList<Long> __default) {
+		if (__object.isNull(__key)) {
+			return __default;
+		} else {
+			JSONArray array = __object.optJSONArray(__key);
+			ArrayList<Long> list = new ArrayList<Long>(array.length());
+			for (int i = 0; i < array.length(); i++) {
+				list.add(array.optLong(i, 0));
 			}
 			return list;
 		}
