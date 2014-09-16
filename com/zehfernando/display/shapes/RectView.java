@@ -26,7 +26,7 @@ public class RectView extends View {
 	public RectView(Context __context, AttributeSet __attrs, int __defStyle) {
 		super(__context);
 		init();
-}
+	}
 
 	// ================================================================================================================
 	// INTERNAL INTERFACE ---------------------------------------------------------------------------------------------
