@@ -334,4 +334,8 @@ public class StringUtils {
 
 		return __source;
 	}
+
+	public static String getUniqueString() {
+		return System.currentTimeMillis() + "_" + (Math.random() * 1000f) + "_" + NumberUtils.getUniqueSequentialNumber();
+	}
 }
