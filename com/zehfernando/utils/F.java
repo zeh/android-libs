@@ -7,6 +7,9 @@ import android.util.Log;
 
 public class F {
 
+	// Can be used as an extra way of filtering logs
+	public static String extraDecoration = null;
+
 	public static void log() {
 		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
@@ -15,11 +18,15 @@ public class F {
 		String methodName = stack[3].getMethodName();
 
 		String tag = className+"."+methodName+"()";
-		Log.v(tag, "-");
+
+		String s = "-";
+		if (extraDecoration != null) s = extraDecoration + s;
+		Log.v(tag, s);
 	}
 
 	public static void logStackTrace() {
 		String txt = "";
+		if (extraDecoration != null) txt = extraDecoration + txt;
 		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
 		for (int i = 3; i < stack.length; i++) {
@@ -39,6 +46,7 @@ public class F {
 		String methodName = stack[3].getMethodName();
 
 		String tag = className+"."+methodName+"()";
+		if (extraDecoration != null) __message = extraDecoration + __message;
 		Log.v(tag, __message);
 	}
 
@@ -50,6 +58,7 @@ public class F {
 		String methodName = stack[3].getMethodName();
 
 		String tag = className+"."+methodName+"()";
+		if (extraDecoration != null) __message = extraDecoration + __message;
 		Log.d(tag, __message);
 	}
 
@@ -61,6 +70,7 @@ public class F {
 		String methodName = stack[3].getMethodName();
 
 		String tag = className+"."+methodName+"()";
+		if (extraDecoration != null) __message = extraDecoration + __message;
 		Log.i(tag, __message);
 	}
 
@@ -72,6 +82,7 @@ public class F {
 		String methodName = stack[3].getMethodName();
 
 		String tag = className+"."+methodName+"()";
+		if (extraDecoration != null) __message = extraDecoration + __message;
 		Log.w(tag, __message);
 	}
 
@@ -83,6 +94,7 @@ public class F {
 		String methodName = stack[3].getMethodName();
 
 		String tag = className+"."+methodName+"()";
+		if (extraDecoration != null) __message = extraDecoration + __message;
 		Log.e(tag, __message);
 	}
 }
