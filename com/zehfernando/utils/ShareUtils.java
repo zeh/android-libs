@@ -2,6 +2,7 @@ package com.zehfernando.utils;
 
 import java.io.File;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,6 +10,9 @@ import android.text.Html;
 import android.util.Log;
 
 public class ShareUtils {
+
+	// Constants
+	public static final int REQUEST_CODE_SHARE = 10001; // Returning from the sharing intent
 
 //	public static void shareContent(Context __context) {
 //		final Intent sendIntent = new Intent(Intent.ACTION_SEND);
@@ -76,15 +80,30 @@ public class ShareUtils {
 		//return __context.getCacheDir() + "/attachment";
 	}
 
+	@Deprecated
 	public static void shareURL(Context __context, String __dialogTitle, String __subject, String __url) {
 		shareText(__context, __dialogTitle, __subject, __url);
 	}
 
+	@Deprecated
 	public static void shareText(Context __context, String __dialogTitle, String __subject, String __body) {
 		Intent i = new Intent(Intent.ACTION_SEND);
 		i.setType("text/plain");
 		i.putExtra(Intent.EXTRA_SUBJECT, __subject);
 		i.putExtra(Intent.EXTRA_TEXT, __body);
 		__context.startActivity(Intent.createChooser(i, __dialogTitle));
+	}
+
+	public static void shareURLWithResult(Activity __activity, String __dialogTitle, String __subject, String __url) {
+		shareTextWithResult(__activity, __dialogTitle, __subject, __url);
+	}
+
+	public static void shareTextWithResult(Activity __activity, String __dialogTitle, String __subject, String __body) {
+		Intent i = new Intent(Intent.ACTION_SEND);
+		i.setType("text/plain");
+		i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+		i.putExtra(Intent.EXTRA_SUBJECT, __subject);
+		i.putExtra(Intent.EXTRA_TEXT, __body);
+		__activity.startActivityForResult(Intent.createChooser(i, __dialogTitle), REQUEST_CODE_SHARE);
 	}
 }
