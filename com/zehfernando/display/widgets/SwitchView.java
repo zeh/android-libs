@@ -18,7 +18,6 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 
 import com.zehfernando.data.geom.Point;
-import com.zehfernando.utils.F;
 import com.zehfernando.utils.MathUtils;
 
 public class SwitchView extends View {
@@ -55,6 +54,8 @@ public class SwitchView extends View {
 	private String textOn;
 	private String textOff;
 
+	private OnChangeListener onChangeListener;
+
 	// ================================================================================================================
 	// CONSTRUCTOR ----------------------------------------------------------------------------------------------------
 
@@ -89,6 +90,8 @@ public class SwitchView extends View {
 	@Override
 	public boolean onTouchEvent(MotionEvent __event) {
 		// Testing... moves needle
+
+		if (!isEnabled()) return false;
 
 		switch (__event.getAction()) {
 			case MotionEvent.ACTION_DOWN:
@@ -274,6 +277,18 @@ public class SwitchView extends View {
 		}
 	}
 
+	private void dispatchOnChange() {
+		if (onChangeListener != null) onChangeListener.onChange(this, isChecked());
+	}
+
+
+	// ================================================================================================================
+	// INTERFACE INTERFACE --------------------------------------------------------------------------------------------
+
+	public interface OnChangeListener {
+		public void onChange(SwitchView __switch, boolean __isChecked);
+	}
+
 
 	// ================================================================================================================
 	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
@@ -346,9 +361,15 @@ public class SwitchView extends View {
 	public void setChecked(boolean __checked, boolean __animated) {
 		//if (_isChecked != __checked) {
 		_isChecked = __checked;
+		dispatchOnChange();
 		updateStateFromChecked(__animated);
 		//}
 	}
+
+	public void setOnChangeListener(OnChangeListener __listener) {
+		onChangeListener = __listener;
+	}
+
 
 	// ================================================================================================================
 	// HELPER CLASSES -------------------------------------------------------------------------------------------------
