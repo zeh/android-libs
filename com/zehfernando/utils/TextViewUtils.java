@@ -1,16 +1,54 @@
 package com.zehfernando.utils;
 
+import java.util.ArrayList;
+
+import android.graphics.Typeface;
 import android.text.Html;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.URLSpan;
 import android.view.View;
 import android.widget.TextView;
 
+import com.zehfernando.display.CustomTypefaceSpan;
+
 public class TextViewUtils {
 
 	// ================================================================================================================
-	// STATIC INTERFACE -----------------------------------------------------------------------------------------------
+	// PRIVATE INTERFACE -----------------------------------------------------------------------------------------------
+
+	private static void setTextViewSpanFromStyles(TextView __textView, String __text, String __tagOpen, String __tagClose, Object __span) {
+		// Sets the text of a TextView with span replacing certain tags
+
+		// Find the position of all tags
+		int tagOpenPos = __text.indexOf(__tagOpen);
+		int tagClosePos = __text.indexOf(__tagClose, tagOpenPos+1);
+
+		ArrayList<Integer> positions = new ArrayList<Integer>();
+
+		while (tagOpenPos > -1 && tagClosePos > -1) {
+
+			__text = __text.substring(0, tagOpenPos) + __text.substring(tagOpenPos + __tagOpen.length(), tagClosePos) + __text.substring(tagClosePos + __tagClose.length(), __text.length());
+
+			positions.add(tagOpenPos);
+			positions.add(tagClosePos - __tagOpen.length());
+
+			tagOpenPos = __text.indexOf(__tagOpen);
+			tagClosePos = __text.indexOf(__tagClose, tagOpenPos+1);
+		}
+
+		// Create actual span
+		SpannableString spanString = new SpannableString(__text);
+		for (int i = 0; i < positions.size(); i += 2) {
+			spanString.setSpan(__span, positions.get(i), positions.get(i+1), 0);
+		}
+
+		__textView.setText(spanString);
+	}
+
+	// ================================================================================================================
+	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
 
 	public static void setTextViewHTMLClickableWithCustomCommands(TextView __textView, String __textSource, InternalHardcodedURLSpan.OnClickLinkListener __onClickLinkListener) {
 		// Shitty name!
@@ -36,6 +74,12 @@ public class TextViewUtils {
 		__textView.setMovementMethod(LinkMovementMethod.getInstance());
 	}
 
+	public static void setTextViewBoldStyle(TextView __textView, Typeface __typeface, int __color) {
+		// Replaces <b>...</b> inside a textview with proper bold styles
+		CustomTypefaceSpan boldSpan = new CustomTypefaceSpan(__typeface, __color);
+		setTextViewSpanFromStyles(__textView, __textView.getText().toString(), "<b>", "</b>", boldSpan);
+	}
+
 
 	// ================================================================================================================
 	// AUXILIARY CLASES -----------------------------------------------------------------------------------------------
@@ -43,7 +87,7 @@ public class TextViewUtils {
 	public static class InternalHardcodedURLSpan extends URLSpan {
 
 		// Properties
-		private OnClickLinkListener onClickLinkListener;
+		private final OnClickLinkListener onClickLinkListener;
 
 		// Constructor
 
