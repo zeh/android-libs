@@ -2,6 +2,8 @@ package com.zehfernando.utils;
 
 public class NumberUtils {
 
+	private static long uniqueNumber = 0;
+
 	// Constants
 	protected final static RomanNumber[] romanNumbers = {
 		new RomanNumber(1000, "M"),
@@ -21,6 +23,11 @@ public class NumberUtils {
 
 	// ================================================================================================================
 	// PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
+
+	public static long getUniqueSequentialNumber() {
+		// Returns a number that is unique for this session
+		return uniqueNumber++;
+	}
 
 	public static String numberToRomanNumerals(String __number) {
 		return numberToRomanNumerals(Integer.parseInt(__number));
