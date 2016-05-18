@@ -16,7 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.os.Debug;
 
-import com.zehfernando.data.config.PersistentData;
+import com.zehfernando.data.persistence.PersistentData;
 import com.zehfernando.utils.F;
 import com.zehfernando.utils.StringUtils;
 
